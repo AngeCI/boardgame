@@ -1,0 +1,119 @@
+* {
+  font-family: sans-serif;
+}
+@media (prefers-color-scheme: light) {
+  body {
+    background: white;
+    color: black;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #17141d;
+    color: #c5c5c5;
+  }
+}
+:root {
+  --go-board-background: #f1b060;
+  --go-board-foreground: #805030;
+  --go-board-white: white;
+  --go-board-black: #303030;
+}
+table.go-board, table.go-board-coord {
+  padding: 0;
+  border-spacing: 0;
+  table-layout: fixed;
+  user-select: none;
+  overflow: hidden;
+  text-align: center;
+  background-color: var(--go-board-background);
+  color: var(--go-board-foreground);
+}
+table.go-board tr, table.go-board-coord tr {
+  height: 28px;
+}
+table.go-board td, table.go-board-coord td {
+  width: 26px;
+}
+table.go-board td:first-child, table.go-board-coord td:first-child {
+  font-weight: bold;
+  font-family: sans-serif;
+}
+table.go-board tr:last-child td, table.go-board-coord tr:last-child td {
+  font-weight: bold;
+  font-family: sans-serif;
+}
+table.go-board td, table.go-board-coord [data-xy] {
+  background-image: linear-gradient(90deg, transparent 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, transparent 53%),
+    linear-gradient(transparent 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, transparent 53%);
+}
+table.go-board [data-star="1"], table.go-board-coord [data-star="1"] {
+  background-image: radial-gradient(var(--go-board-foreground) 20%, transparent 25%),
+    linear-gradient(90deg, transparent 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, transparent 53%),
+    linear-gradient(transparent 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, transparent 53%);
+}
+table.go-board [data-bw="w"], table.go-board-coord [data-bw="w"] {
+  background-image: radial-gradient(var(--go-board-white) 56%, var(--go-board-black) 62%, var(--go-board-black) 65%, transparent 68%),
+    linear-gradient(90deg, transparent 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, transparent 53%),
+    linear-gradient(transparent 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, transparent 53%) !important;
+  color: black;
+}
+table.go-board [data-bw="b"], table.go-board-coord [data-bw="b"] {
+  background-image: radial-gradient(var(--go-board-black) 65%, transparent 68%),
+    linear-gradient(90deg, transparent 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, transparent 53%),
+    linear-gradient(transparent 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, transparent 53%) !important;
+  color: white;
+}
+table.go-board [data-bw="N"], table.go-board-coord [data-bw="N"] {
+  background-image: radial-gradient(var(--go-board-background) 55%, var(--go-board-foreground) 61%, var(--go-board-foreground) 65%, transparent 68%),
+    linear-gradient(90deg, transparent 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, transparent 53%),
+    linear-gradient(transparent 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, transparent 53%) !important;
+  color: blue;
+}
+/* Top edge */
+table.go-board tr:first-child td, table.go-board-coord tr:first-child td:not(:first-child) {
+  background-image: linear-gradient(var(--go-board-background) 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, transparent 53%),
+    linear-gradient(90deg, transparent 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, transparent 53%);
+}
+/* Left edge */
+table.go-board td:first-child, table.go-board-coord tr:not(:last-child) td:nth-child(2) {
+  background-image: linear-gradient(90deg, var(--go-board-background) 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, transparent 53%),
+    linear-gradient(transparent 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, transparent 53%);
+}
+/* Right edge */
+table.go-board td:last-child, table.go-board-coord tr:not(:last-child) td:last-child {
+  background-image: linear-gradient(90deg, transparent 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, var(--go-board-background) 53%),
+    linear-gradient(transparent 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, transparent 53%);
+}
+/* Bottom edge */
+table.go-board tr:last-child td, table.go-board-coord tr:nth-last-child(2) td:not(:first-child) {
+  background-image: linear-gradient(transparent 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, var(--go-board-background) 53%),
+    linear-gradient(90deg, transparent 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, transparent 53%);
+}
+/* Corners */
+table.go-board tr:first-child td:first-child, table.go-board-coord tr:first-child td:nth-child(2) {
+  background-image: linear-gradient(135deg, var(--go-board-background) 49%, transparent 50%),
+    linear-gradient(90deg, transparent 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, transparent 53%),
+    linear-gradient(transparent 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, transparent 53%);
+}
+table.go-board tr:first-child td:last-child, table.go-board-coord tr:first-child td:last-child {
+  background-image: linear-gradient(45deg, transparent 50%, var(--go-board-background) 51%),
+    linear-gradient(90deg, transparent 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, transparent 53%),
+    linear-gradient(transparent 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, transparent 53%);
+}
+table.go-board tr:last-child td:first-child, table.go-board-coord tr:nth-last-child(2) td:nth-child(2) {
+  background-image: linear-gradient(45deg, var(--go-board-background) 49%, transparent 50%),
+    linear-gradient(90deg, transparent 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, transparent 53%),
+    linear-gradient(transparent 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, transparent 53%);
+}
+table.go-board tr:last-child td:last-child, table.go-board-coord tr:nth-last-child(2) td:last-child {
+  background-image: linear-gradient(135deg, transparent 50%, var(--go-board-background) 51%),
+    linear-gradient(90deg, transparent 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, transparent 53%),
+    linear-gradient(transparent 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, transparent 53%);
+}
+/* Hovers */
+table.go-board td:hover , table.go-board-coord td[xy]:hover {
+  background-image: radial-gradient(rgba(128, 128, 128, 0.5) 55%, var(--go-board-foreground) 61%, var(--go-board-foreground) 65%, transparent 68%),
+    linear-gradient(90deg, transparent 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, transparent 53%),
+    linear-gradient(transparent 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, transparent 53%) !important;
+}

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Web Gomoku Board</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<button id="reset-btn">Reset board</button>
+<button id="capture-btn">Capture Image</button>
+<table class="go-board-coord">
+	<tr>
+		<td>15</td>
+		<td data-xy="AO"></td>
+		<td data-xy="BO"></td>
+		<td data-xy="CO"></td>
+		<td data-xy="DO"></td>
+		<td data-xy="EO"></td>
+		<td data-xy="FO"></td>
+		<td data-xy="GO"></td>
+		<td data-xy="HO"></td>
+		<td data-xy="IO"></td>
+		<td data-xy="JO"></td>
+		<td data-xy="KO"></td>
+		<td data-xy="LO"></td>
+		<td data-xy="MO"></td>
+		<td data-xy="NO"></td>
+		<td data-xy="OO"></td>
+	</tr>
+	<tr>
+		<td>14</td>
+		<td data-xy="AN"></td>
+		<td data-xy="BN"></td>
+		<td data-xy="CN"></td>
+		<td data-xy="DN"></td>
+		<td data-xy="EN"></td>
+		<td data-xy="FN"></td>
+		<td data-xy="GN"></td>
+		<td data-xy="HN"></td>
+		<td data-xy="IN"></td>
+		<td data-xy="JN"></td>
+		<td data-xy="KN"></td>
+		<td data-xy="LN"></td>
+		<td data-xy="MN"></td>
+		<td data-xy="NN"></td>
+		<td data-xy="ON"></td>
+	</tr>
+	<tr>
+		<td>13</td>
+		<td data-xy="AM"></td>
+		<td data-xy="BM"></td>
+		<td data-xy="CM"></td>
+		<td data-xy="DM"></td>
+		<td data-xy="EM"></td>
+		<td data-xy="FM"></td>
+		<td data-xy="GM"></td>
+		<td data-xy="HM"></td>
+		<td data-xy="IM"></td>
+		<td data-xy="JM"></td>
+		<td data-xy="KM"></td>
+		<td data-xy="LM"></td>
+		<td data-xy="MM"></td>
+		<td data-xy="NM"></td>
+		<td data-xy="OM"></td>
+	</tr>
+	<tr>
+		<td>12</td>
+		<td data-xy="AL"></td>
+		<td data-xy="BL"></td>
+		<td data-xy="CL"></td>
+		<td data-xy="DL" data-star="1"></td>
+		<td data-xy="EL"></td>
+		<td data-xy="FL"></td>
+		<td data-xy="GL"></td>
+		<td data-xy="HL"></td>
+		<td data-xy="IL"></td>
+		<td data-xy="JL"></td>
+		<td data-xy="KL"></td>
+		<td data-xy="LL" data-star="1"></td>
+		<td data-xy="ML"></td>
+		<td data-xy="NL"></td>
+		<td data-xy="OL"></td>
+	</tr>
+	<tr>
+		<td>11</td>
+		<td data-xy="AK"></td>
+		<td data-xy="BK"></td>
+		<td data-xy="CK"></td>
+		<td data-xy="DK"></td>
+		<td data-xy="EK"></td>
+		<td data-xy="FK"></td>
+		<td data-xy="GK"></td>
+		<td data-xy="HK"></td>
+		<td data-xy="IK"></td>
+		<td data-xy="JK"></td>
+		<td data-xy="KK"></td>
+		<td data-xy="LK"></td>
+		<td data-xy="MK"></td>
+		<td data-xy="NK"></td>
+		<td data-xy="OK"></td>
+	</tr>
+	<tr>
+		<td>10</td>
+		<td data-xy="AJ"></td>
+		<td data-xy="BJ"></td>
+		<td data-xy="CJ"></td>
+		<td data-xy="DJ"></td>
+		<td data-xy="EJ"></td>
+		<td data-xy="FJ"></td>
+		<td data-xy="GJ"></td>
+		<td data-xy="HJ"></td>
+		<td data-xy="IJ"></td>
+		<td data-xy="JJ"></td>
+		<td data-xy="KJ"></td>
+		<td data-xy="LJ"></td>
+		<td data-xy="MJ"></td>
+		<td data-xy="NJ"></td>
+		<td data-xy="OJ"></td>
+	</tr>
+	<tr>
+		<td>9</td>
+		<td data-xy="AI"></td>
+		<td data-xy="BI"></td>
+		<td data-xy="CI"></td>
+		<td data-xy="DI"></td>
+		<td data-xy="EI"></td>
+		<td data-xy="FI"></td>
+		<td data-xy="GI"></td>
+		<td data-xy="HI"></td>
+		<td data-xy="II"></td>
+		<td data-xy="JI"></td>
+		<td data-xy="KI"></td>
+		<td data-xy="LI"></td>
+		<td data-xy="MI"></td>
+		<td data-xy="NI"></td>
+		<td data-xy="OI"></td>
+	</tr>
+	<tr>
+		<td>8</td>
+		<td data-xy="AH"></td>
+		<td data-xy="BH"></td>
+		<td data-xy="CH"></td>
+		<td data-xy="DH"></td>
+		<td data-xy="EH"></td>
+		<td data-xy="FH"></td>
+		<td data-xy="GH"></td>
+		<td data-xy="HH" data-star="1"></td>
+		<td data-xy="IH"></td>
+		<td data-xy="JH"></td>
+		<td data-xy="KH"></td>
+		<td data-xy="LH"></td>
+		<td data-xy="MH"></td>
+		<td data-xy="NH"></td>
+		<td data-xy="OH"></td>
+	</tr>
+	<tr>
+		<td>7</td>
+		<td data-xy="AG"></td>
+		<td data-xy="BG"></td>
+		<td data-xy="CG"></td>
+		<td data-xy="DG"></td>
+		<td data-xy="EG"></td>
+		<td data-xy="FG"></td>
+		<td data-xy="GG"></td>
+		<td data-xy="HG"></td>
+		<td data-xy="IG"></td>
+		<td data-xy="JG"></td>
+		<td data-xy="KG"></td>
+		<td data-xy="LG"></td>
+		<td data-xy="MG"></td>
+		<td data-xy="NG"></td>
+		<td data-xy="OG"></td>
+	</tr>
+	<tr>
+		<td>6</td>
+		<td data-xy="AF"></td>
+		<td data-xy="BF"></td>
+		<td data-xy="CF"></td>
+		<td data-xy="DF"></td>
+		<td data-xy="EF"></td>
+		<td data-xy="FF"></td>
+		<td data-xy="GF"></td>
+		<td data-xy="HF"></td>
+		<td data-xy="IF"></td>
+		<td data-xy="JF"></td>
+		<td data-xy="KF"></td>
+		<td data-xy="LF"></td>
+		<td data-xy="MF"></td>
+		<td data-xy="NF"></td>
+		<td data-xy="OF"></td>
+	</tr>
+	<tr>
+		<td>5</td>
+		<td data-xy="AE"></td>
+		<td data-xy="BE"></td>
+		<td data-xy="CE"></td>
+		<td data-xy="DE"></td>
+		<td data-xy="EE"></td>
+		<td data-xy="FE"></td>
+		<td data-xy="GE"></td>
+		<td data-xy="HE"></td>
+		<td data-xy="IE"></td>
+		<td data-xy="JE"></td>
+		<td data-xy="KE"></td>
+		<td data-xy="LE"></td>
+		<td data-xy="ME"></td>
+		<td data-xy="NE"></td>
+		<td data-xy="OE"></td>
+	</tr>
+	<tr>
+		<td>4</td>
+		<td data-xy="AD"></td>
+		<td data-xy="BD"></td>
+		<td data-xy="CD"></td>
+		<td data-xy="DD" data-star="1"></td>
+		<td data-xy="ED"></td>
+		<td data-xy="FD"></td>
+		<td data-xy="GD"></td>
+		<td data-xy="HD"></td>
+		<td data-xy="ID"></td>
+		<td data-xy="JD"></td>
+		<td data-xy="KD"></td>
+		<td data-xy="LD" data-star="1"></td>
+		<td data-xy="MD"></td>
+		<td data-xy="ND"></td>
+		<td data-xy="OD"></td>
+	</tr>
+	<tr>
+		<td>3</td>
+		<td data-xy="AC"></td>
+		<td data-xy="BC"></td>
+		<td data-xy="CC"></td>
+		<td data-xy="DC"></td>
+		<td data-xy="EC"></td>
+		<td data-xy="FC"></td>
+		<td data-xy="GC"></td>
+		<td data-xy="HC"></td>
+		<td data-xy="IC"></td>
+		<td data-xy="JC"></td>
+		<td data-xy="KC"></td>
+		<td data-xy="LC"></td>
+		<td data-xy="MC"></td>
+		<td data-xy="NC"></td>
+		<td data-xy="OC"></td>
+	</tr>
+	<tr>
+		<td>2</td>
+		<td data-xy="AB"></td>
+		<td data-xy="BB"></td>
+		<td data-xy="CB"></td>
+		<td data-xy="DB"></td>
+		<td data-xy="EB"></td>
+		<td data-xy="FB"></td>
+		<td data-xy="GB"></td>
+		<td data-xy="HB"></td>
+		<td data-xy="IB"></td>
+		<td data-xy="JB"></td>
+		<td data-xy="KB"></td>
+		<td data-xy="LB"></td>
+		<td data-xy="MB"></td>
+		<td data-xy="NB"></td>
+		<td data-xy="OB"></td>
+	</tr>
+	<tr>
+		<td>1</td>
+		<td data-xy="AA"></td>
+		<td data-xy="BA"></td>
+		<td data-xy="CA"></td>
+		<td data-xy="DA"></td>
+		<td data-xy="EA"></td>
+		<td data-xy="FA"></td>
+		<td data-xy="GA"></td>
+		<td data-xy="HA"></td>
+		<td data-xy="IA"></td>
+		<td data-xy="JA"></td>
+		<td data-xy="KA"></td>
+		<td data-xy="LA"></td>
+		<td data-xy="MA"></td>
+		<td data-xy="NA"></td>
+		<td data-xy="OA"></td>
+	</tr>
+	<tr>
+		<td data-xy="00"></td>
+		<td>A</td>
+		<td>B</td>
+		<td>C</td>
+		<td>D</td>
+		<td>E</td>
+		<td>F</td>
+		<td>G</td>
+		<td>H</td>
+		<td>I</td>
+		<td>J</td>
+		<td>K</td>
+		<td>L</td>
+		<td>M</td>
+		<td>N</td>
+		<td>O</td>
+	</tr>
+</table>
+<canvas width="448" height="448" style="display: none;"></canvas>
+<script src="gomoku.js"></script>
+</body>
+</html>
