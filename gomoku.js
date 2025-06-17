@@ -139,6 +139,9 @@ let initializedBoard = function () {
     };
   };
 
+  if (document.querySelector("p"))
+    document.body.removeChild(document.querySelector("p"));
+
   ctx.fillStyle = "#f1b060";
   ctx.fillRect(0, 0, 448, 448);
 
@@ -189,6 +192,11 @@ let saveFile = (blob, filename = "") => {
 let captureImage = async function () {
   const blob = await cnv.getBlob();
   await navigator.clipboard.write([new ClipboardItem({[blob.type]: blob})]);
+
+  document.getElementById("image-capture-popup").classList.toggle("show");
+  setTimeout(() => {
+    document.getElementById("image-capture-popup").classList.toggle("show");
+  }, 5000);
 };
 
 document.getElementById("capture-btn").addEventListener("click", captureImage);
