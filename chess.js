@@ -25,7 +25,7 @@ let Board = class {
 
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
-        this.ctx.fillStyle = colours[y + x & 1];
+        this.ctx.fillStyle = colours[(y ^ x) & 1];
         this.ctx.fillRect(x * 100, y * 100, 100, 100);
       };
     };
@@ -59,6 +59,16 @@ let Board = class {
           file++;
         };
       };
+    };
+  };
+  importFromBase64(str) {
+    let binArray = atob(str);
+    for (let i = 0; i < binArray.length; i++) {
+        let a = str.charCodeAt(i);
+        for (let j = 0; j < 2; j++) {
+            this.squares[i << 1 | j] = ((a & 0xf0) >> 4) + 8;
+            a <<= 4;
+        }
     };
   };
   toString() {
@@ -106,6 +116,13 @@ let Board = class {
     };
 
     return output;
+  };
+  toBase64String() {
+    let arr = new Uint8Array(32);
+    for (let i = 0; i < 32; i++) {
+      arr[i] = (this.squares[i << 1] << 4) + this.squares[i << 1 | 1] - 136;
+    };
+    return btoa(Array.from(arr, (b) => String.fromCodePoint(b)).join(""));
   };
   getPieceBitboard(type, isWhite) {
     

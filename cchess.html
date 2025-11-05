@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Web Chinese Chess Board</title>
+<link rel="stylesheet" href="style.css" />
+<style>
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  padding: 0;
+}
+#grid {
+  display: grid;
+  grid-template-columns: auto;
+}
+@media only screen and (min-width: 600px) {
+  #grid {
+    grid-template-columns: auto auto auto;
+  }
+}
+</style>
+</head>
+<body>
+<div id="grid">
+  <div></div>
+  <div style="position: relative;">
+    <table class="cchess-container" style="position: absolute;">
+      <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    </table>
+    <img src="img/cchess_board.svg" style="max-height: 100vmin;" />
+  </div>
+  <div>
+    <div>
+      <label for="load-record">Load chess record file:</label>
+      <input type="file" id="load-record" />
+    </div>
+    <div>
+      <label for="load-engine">Load WASM engine:</label>
+      <input type="file" id="load-engine" accept="application/wasm" />
+    </div>
+    <div>
+      <label for="game-select">Select game from file:</label>
+      <select id="game-select"></select>
+    </div>
+    <hr />
+      <p>Current mode:</p>
+      <input type="radio" id="btn-viewmode" name="mode" checked />
+      <label for="btn-viewmode">View</label>
+      <input type="radio" id="btn-editmode" name="mode" />
+      <label for="btn-editmode">Edit</label>
+      <input type="radio" id="btn-matchmode" name="mode" />
+      <label for="btn-matchmode">Match</label>
+    <hr />
+    <button id="btn-previous">←</button>
+    &#32;
+    <span id="step-indicator"><span id="step-count">0</span>/<span id="step-total">0</span></span>
+    &#32;
+    <button id="btn-next">→</button>
+    <div class="popup">
+      <button id="capture-btn">Capture Image</button>
+      <span class="popuptext-below" id="image-capture-popup">Image written to clipboard</span>
+    </div>
+    <hr />
+    <div>
+      <label for="textbox-fen">FEN string of current position:</label>
+      <input type="text" id="textbox-fen" value="rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR w - - 0 1" />
+      <div class="popup" style="display: inline;">
+        <button id="fen-copy-btn">Copy FEN string</button>
+        <span class="popuptext-below" id="fen-copy-popup">String copied</span>
+      </div>
+      <button id="btn-import-fen">Load FEN string</button>
+    </div>
+    <div>
+      <label for="textbox-b64moves">Base64 move notation:</label>
+      <input type="text" id="textbox-b64moves" />
+      <button id="btn-import-b64moves">Parse base64 moves</button>
+    </div>
+    <div>
+      <p>Comments:</p>
+      <textarea id="textbox-comments"></textarea>
+    </div>
+  </div>
+</div>
+<script src="cchess.js"></script>
+</body>
+</html>
