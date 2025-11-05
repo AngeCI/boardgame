@@ -22,6 +22,12 @@ body {
     grid-template-columns: auto auto auto;
   }
 }
+@media only screen and (max-width: 600px) {
+  #grid > div:nth-child(3) {
+    max-height: calc(100vh - 100vmin);
+    overflow-y: auto;
+  }
+}
 </style>
 </head>
 <body>
