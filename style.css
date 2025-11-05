@@ -20,6 +20,14 @@
   --go-board-black: #303030;
   --chess-board-light: #f1d9c0;
   --chess-board-dark: #a97a65;
+  --chess-piece-white: white;
+  --chess-piece-black: black;
+  --chess-check--light: #f2464e;
+  --chess-check--dark: #d2191f;
+  --chess-lastmove-src-light: #d9bc73;
+  --chess-lastmove-src-dark: #d5ab53;
+  --chess-lastmove-dst-light: #e5dd88;
+  --chess-lastmove-dst-dark: #d2bc66;
 }
 table.go-board, table.go-board-coord {
   padding: 0;
@@ -121,32 +129,72 @@ table.go-board td:hover , table.go-board-coord td[xy]:hover {
     linear-gradient(transparent 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, transparent 53%) !important;
 }
 .chess-container {
-	border-collapse: collapse;
-	width: 100vmin;
-	height: 100vmin;
+  border-collapse: collapse;
+  width: 100vmin;
+  height: 100vmin;
 }
 .chess-container td {
-	background-color: var(--chess-board-light);
-	cursor: default;
-	font-size: 16px;
-	width: 12.5%;
-	height: 12.5%;
-	text-align: center;
+  background-color: var(--chess-board-light);
+  cursor: default;
+  font-size: 10vmin;
+  font-weight: bold;
+  width: 12.5%;
+  height: 12.5%;
+  text-align: center;
 }
 .chess-white {
-	color: white;
+  color: var(--chess-piece-white);
 }
 .chess-black {
-	color: black;
+  color: var(--chess-piece-black);
 }
 table.chess-container tr:nth-child(odd) > td:nth-child(even) {
-	background-color: var(--chess-board-dark);
+  background-color: var(--chess-board-dark);
 }
 table.chess-container tr:nth-child(even) > td:nth-child(odd) {
-	background-color: var(--chess-board-dark);
+  background-color: var(--chess-board-dark);
 }
 .chess-highlight {
-	filter: invert(100%);
+  filter: invert(100%);
+}
+.chess-check {
+  background-color: var(--chess-check--light);
+}
+tr:nth-child(odd) > td.chess-check :nth-child(even) {
+  background-color: var(--chess-check--dark);
+}
+tr:nth-child(even) > td.chess-check:nth-child(odd) {
+  background-color: var(--chess-check--dark);
+}
+.chess-lastmove-src {
+  background-color: var(--chess-lastmove-src-light);
+}
+tr:nth-child(odd) > td.chess-lastmove-src:nth-child(even) {
+  background-color: var(--chess-lastmove-src-dark);
+}
+tr:nth-child(even) > td.chess-lastmove-src:nth-child(odd) {
+  background-color: var(--chess-lastmove-src-dark);
+}
+.chess-lastmove-dst {
+  background-color: var(--chess-lastmove-dst-light);
+}
+tr:nth-child(odd) > td.chess-lastmove-dst:nth-child(even) {
+  background-color: var(--chess-lastmove-dst-dark);
+}
+tr:nth-child(even) > td.chess-lastmove-dst:nth-child(odd) {
+  background-color: var(--chess-lastmove-dst-dark);
+}
+.cchess-container {
+  border-collapse: collapse;
+  width: 75vmin;
+  height: 83vmin;
+  margin: 7.5vmin 0;
+}
+.cchess-container td {
+  cursor: default;
+  width: 11.1%;
+  height: 10%;
+  text-align: center;
 }
 .popup {
   position: relative;

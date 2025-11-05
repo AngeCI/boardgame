@@ -14,8 +14,8 @@ body {
   padding: 0;
 }
 #grid {
-	display: grid;
-	grid-template-columns: auto;
+  display: grid;
+  grid-template-columns: auto;
 }
 @media only screen and (min-width: 600px) {
   #grid {
@@ -46,24 +46,79 @@ body {
       <label for="load-engine">Load WASM engine:</label>
       <input type="file" id="load-engine" />
     </div>
+    <div>
+      <label for="game-select">Select game from file:</label>
+      <select id="game-select"></select>
+    </div>
     <hr />
-    <button onclick="btnPrevious();">←</button>
+      <p>Current mode:</p>
+      <input type="radio" id="btn-viewmode" name="mode" />
+      <label for="btn-viewmode">View</label>
+      <input type="radio" id="btn-editmode" name="mode" />
+      <label for="btn-editmode">Edit</label>
+      <input type="radio" id="btn-matchmode" name="mode" />
+      <label for="btn-matchmode">Match</label>
+    <hr />
+    <button id="btn-previous">←</button>
     &#32;
     <span id="step-indicator"><span id="step-count">0</span>/<span id="step-total">0</span></span>
     &#32;
-    <button onclick="btnNext();">→</button>
+    <button id="btn-next">→</button>
+    <div class="popup">
+      <button id="image-capture-btn">Capture Image</button>
+      <span class="popuptext-below" id="image-capture-popup">Image written to clipboard</span>
+    </div>
     <hr />
     <div>
       <label for="textbox-fen">FEN string of current position:</label>
       <input type="text" id="textbox-fen" value="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1" />
-      <button>Load FEN string</button>
+      <div class="popup" style="display: inline;">
+        <button id="fen-copy-btn">Copy FEN string</button>
+        <span class="popuptext-below" id="fen-copy-popup">String copied</span>
+      </div>
+      <button id="btn-import-fen">Load FEN string</button>
     </div>
     <div>
       <label for="textbox-b64moves">Base64 move notation:</label>
       <input type="text" id="textbox-b64moves" value="" />
+      <button id="btn-import-b64moves">Parse base64 moves</button>
+    </div>
+    <div>
+      <p>Comments:</p>
+      <textarea id="textbox-comments"></textarea>
     </div>
   </div>
 </div>
 <script src="chess.js"></script>
+<script type="text/javascript">
+"use strict";
+
+let boardEl = document.querySelector("table.chess-container tbody");
+let board = new Board();
+
+document.getElementById("image-capture-btn").addEventListener("click", async () => {
+  let blob = await board.getImage();
+  navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+  document.getElementById("image-capture-popup").classList.toggle("show");
+  setTimeout(() => {
+    document.getElementById("image-capture-popup").classList.toggle("show");
+  }, 5000);
+});
+
+document.getElementById("fen-copy-btn").addEventListener("click", () => {
+  navigator.clipboard.writeText(document.getElementById("textbox-fen").value);
+  document.getElementById("fen-copy-popup").classList.toggle("show");
+  setTimeout(() => {
+    document.getElementById("fen-copy-popup").classList.toggle("show");
+  }, 5000);
+});
+
+document.getElementById("btn-import-fen").addEventListener("click", () => {
+  board.importFromFen(document.getElementById("textbox-fen").value);
+  board.drawBoard(boardEl);
+});
+
+// document.body.appendChild(board.cnv);
+</script>
 </body>
 </html>
