@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Web Chess Board</title>
+<link rel="stylesheet" href="style.css" />
+<style>
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  padding: 0;
+}
+#grid {
+	display: grid;
+	grid-template-columns: auto;
+}
+@media only screen and (min-width: 600px) {
+  #grid {
+    grid-template-columns: auto auto auto;
+  }
+}
+</style>
+</head>
+<body>
+<div id="grid">
+  <div></div>
+  <table class="chess-container">
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+  </table>
+  <div>
+    <div>
+      <label for="load-record">Load chess record file:</label>
+      <input type="file" id="load-record" />
+    </div>
+    <div>
+      <label for="load-engine">Load WASM engine:</label>
+      <input type="file" id="load-engine" />
+    </div>
+    <hr />
+    <button onclick="btnPrevious();">←</button>
+    &#32;
+    <span id="step-indicator"><span id="step-count">0</span>/<span id="step-total">0</span></span>
+    &#32;
+    <button onclick="btnNext();">→</button>
+    <hr />
+    <div>
+      <label for="textbox-fen">FEN string of current position:</label>
+      <input type="text" id="textbox-fen" value="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1" />
+      <button>Load FEN string</button>
+    </div>
+    <div>
+      <label for="textbox-b64moves">Base64 move notation:</label>
+      <input type="text" id="textbox-b64moves" value="" />
+    </div>
+  </div>
+</div>
+<script src="chess.js"></script>
+</body>
+</html>

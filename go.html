@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Web Go Board</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<button id="reset-btn">Reset board</button>
+<button id="capture-btn">Capture Image</button>
+<table class="go-board-coord">
+	<tr>
+		<td>19</td>
+		<td data-xy="AS"></td>
+		<td data-xy="BS"></td>
+		<td data-xy="CS"></td>
+		<td data-xy="DS"></td>
+		<td data-xy="ES"></td>
+		<td data-xy="FS"></td>
+		<td data-xy="GS"></td>
+		<td data-xy="HS"></td>
+		<td data-xy="IS"></td>
+		<td data-xy="JS"></td>
+		<td data-xy="KS"></td>
+		<td data-xy="LS"></td>
+		<td data-xy="MS"></td>
+		<td data-xy="NS"></td>
+		<td data-xy="OS"></td>
+		<td data-xy="PS"></td>
+		<td data-xy="QS"></td>
+		<td data-xy="RS"></td>
+		<td data-xy="SS"></td>
+	</tr>
+	<tr>
+		<td>18</td>
+		<td data-xy="AR"></td>
+		<td data-xy="BR"></td>
+		<td data-xy="CR"></td>
+		<td data-xy="DR"></td>
+		<td data-xy="ER"></td>
+		<td data-xy="FR"></td>
+		<td data-xy="GR"></td>
+		<td data-xy="HR"></td>
+		<td data-xy="IR"></td>
+		<td data-xy="JR"></td>
+		<td data-xy="KR"></td>
+		<td data-xy="LR"></td>
+		<td data-xy="MR"></td>
+		<td data-xy="NR"></td>
+		<td data-xy="OR"></td>
+		<td data-xy="PR"></td>
+		<td data-xy="QR"></td>
+		<td data-xy="RR"></td>
+		<td data-xy="SR"></td>
+	</tr>
+	<tr>
+		<td>17</td>
+		<td data-xy="AQ"></td>
+		<td data-xy="BQ"></td>
+		<td data-xy="CQ"></td>
+		<td data-xy="DQ"></td>
+		<td data-xy="EQ"></td>
+		<td data-xy="FQ"></td>
+		<td data-xy="GQ"></td>
+		<td data-xy="HQ"></td>
+		<td data-xy="IQ"></td>
+		<td data-xy="JQ"></td>
+		<td data-xy="KQ"></td>
+		<td data-xy="LQ"></td>
+		<td data-xy="MQ"></td>
+		<td data-xy="NQ"></td>
+		<td data-xy="OQ"></td>
+		<td data-xy="PQ"></td>
+		<td data-xy="QQ"></td>
+		<td data-xy="RQ"></td>
+		<td data-xy="SQ"></td>
+	</tr>
+	<tr>
+		<td>16</td>
+		<td data-xy="AP"></td>
+		<td data-xy="BP"></td>
+		<td data-xy="CP"></td>
+		<td data-xy="DP" data-star="1"></td>
+		<td data-xy="EP"></td>
+		<td data-xy="FP"></td>
+		<td data-xy="GP"></td>
+		<td data-xy="HP"></td>
+		<td data-xy="IP"></td>
+		<td data-xy="JP" data-star="1"></td>
+		<td data-xy="KP"></td>
+		<td data-xy="LP"></td>
+		<td data-xy="MP"></td>
+		<td data-xy="NP"></td>
+		<td data-xy="OP"></td>
+		<td data-xy="PP" data-star="1"></td>
+		<td data-xy="QP"></td>
+		<td data-xy="RP"></td>
+		<td data-xy="SP"></td>
+	</tr>
+	<tr>
+		<td>15</td>
+		<td data-xy="AO"></td>
+		<td data-xy="BO"></td>
+		<td data-xy="CO"></td>
+		<td data-xy="DO"></td>
+		<td data-xy="EO"></td>
+		<td data-xy="FO"></td>
+		<td data-xy="GO"></td>
+		<td data-xy="HO"></td>
+		<td data-xy="IO"></td>
+		<td data-xy="JO"></td>
+		<td data-xy="KO"></td>
+		<td data-xy="LO"></td>
+		<td data-xy="MO"></td>
+		<td data-xy="NO"></td>
+		<td data-xy="OO"></td>
+		<td data-xy="PO"></td>
+		<td data-xy="QO"></td>
+		<td data-xy="RO"></td>
+		<td data-xy="SO"></td>
+	</tr>
+	<tr>
+		<td>14</td>
+		<td data-xy="AN"></td>
+		<td data-xy="BN"></td>
+		<td data-xy="CN"></td>
+		<td data-xy="DN"></td>
+		<td data-xy="EN"></td>
+		<td data-xy="FN"></td>
+		<td data-xy="GN"></td>
+		<td data-xy="HN"></td>
+		<td data-xy="IN"></td>
+		<td data-xy="JN"></td>
+		<td data-xy="KN"></td>
+		<td data-xy="LN"></td>
+		<td data-xy="MN"></td>
+		<td data-xy="NN"></td>
+		<td data-xy="ON"></td>
+		<td data-xy="PN"></td>
+		<td data-xy="QN"></td>
+		<td data-xy="RN"></td>
+		<td data-xy="SN"></td>
+	</tr>
+	<tr>
+		<td>13</td>
+		<td data-xy="AM"></td>
+		<td data-xy="BM"></td>
+		<td data-xy="CM"></td>
+		<td data-xy="DM"></td>
+		<td data-xy="EM"></td>
+		<td data-xy="FM"></td>
+		<td data-xy="GM"></td>
+		<td data-xy="HM"></td>
+		<td data-xy="IM"></td>
+		<td data-xy="JM"></td>
+		<td data-xy="KM"></td>
+		<td data-xy="LM"></td>
+		<td data-xy="MM"></td>
+		<td data-xy="NM"></td>
+		<td data-xy="OM"></td>
+		<td data-xy="PM"></td>
+		<td data-xy="QM"></td>
+		<td data-xy="RM"></td>
+		<td data-xy="SM"></td>
+	</tr>
+	<tr>
+		<td>12</td>
+		<td data-xy="AL"></td>
+		<td data-xy="BL"></td>
+		<td data-xy="CL"></td>
+		<td data-xy="DL"></td>
+		<td data-xy="EL"></td>
+		<td data-xy="FL"></td>
+		<td data-xy="GL"></td>
+		<td data-xy="HL"></td>
+		<td data-xy="IL"></td>
+		<td data-xy="JL"></td>
+		<td data-xy="KL"></td>
+		<td data-xy="LL"></td>
+		<td data-xy="ML"></td>
+		<td data-xy="NL"></td>
+		<td data-xy="OL"></td>
+		<td data-xy="PL"></td>
+		<td data-xy="QL"></td>
+		<td data-xy="RL"></td>
+		<td data-xy="SL"></td>
+	</tr>
+	<tr>
+		<td>11</td>
+		<td data-xy="AK"></td>
+		<td data-xy="BK"></td>
+		<td data-xy="CK"></td>
+		<td data-xy="DK"></td>
+		<td data-xy="EK"></td>
+		<td data-xy="FK"></td>
+		<td data-xy="GK"></td>
+		<td data-xy="HK"></td>
+		<td data-xy="IK"></td>
+		<td data-xy="JK"></td>
+		<td data-xy="KK"></td>
+		<td data-xy="LK"></td>
+		<td data-xy="MK"></td>
+		<td data-xy="NK"></td>
+		<td data-xy="OK"></td>
+		<td data-xy="PK"></td>
+		<td data-xy="QK"></td>
+		<td data-xy="RK"></td>
+		<td data-xy="SK"></td>
+	</tr>
+	<tr>
+		<td>10</td>
+		<td data-xy="AJ"></td>
+		<td data-xy="BJ"></td>
+		<td data-xy="CJ"></td>
+		<td data-xy="DJ" data-star="1"></td>
+		<td data-xy="EJ"></td>
+		<td data-xy="FJ"></td>
+		<td data-xy="GJ"></td>
+		<td data-xy="HJ"></td>
+		<td data-xy="IJ"></td>
+		<td data-xy="JJ" data-star="1"></td>
+		<td data-xy="KJ"></td>
+		<td data-xy="LJ"></td>
+		<td data-xy="MJ"></td>
+		<td data-xy="NJ"></td>
+		<td data-xy="OJ"></td>
+		<td data-xy="PJ" data-star="1"></td>
+		<td data-xy="QJ"></td>
+		<td data-xy="RJ"></td>
+		<td data-xy="SJ"></td>
+	</tr>
+	<tr>
+		<td>9</td>
+		<td data-xy="AI"></td>
+		<td data-xy="BI"></td>
+		<td data-xy="CI"></td>
+		<td data-xy="DI"></td>
+		<td data-xy="EI"></td>
+		<td data-xy="FI"></td>
+		<td data-xy="GI"></td>
+		<td data-xy="HI"></td>
+		<td data-xy="II"></td>
+		<td data-xy="JI"></td>
+		<td data-xy="KI"></td>
+		<td data-xy="LI"></td>
+		<td data-xy="MI"></td>
+		<td data-xy="NI"></td>
+		<td data-xy="OI"></td>
+		<td data-xy="PI"></td>
+		<td data-xy="QI"></td>
+		<td data-xy="RI"></td>
+		<td data-xy="SI"></td>
+	</tr>
+	<tr>
+		<td>8</td>
+		<td data-xy="AH"></td>
+		<td data-xy="BH"></td>
+		<td data-xy="CH"></td>
+		<td data-xy="DH"></td>
+		<td data-xy="EH"></td>
+		<td data-xy="FH"></td>
+		<td data-xy="GH"></td>
+		<td data-xy="HH"></td>
+		<td data-xy="IH"></td>
+		<td data-xy="JH"></td>
+		<td data-xy="KH"></td>
+		<td data-xy="LH"></td>
+		<td data-xy="MH"></td>
+		<td data-xy="NH"></td>
+		<td data-xy="OH"></td>
+		<td data-xy="PH"></td>
+		<td data-xy="QH"></td>
+		<td data-xy="RH"></td>
+		<td data-xy="SH"></td>
+	</tr>
+	<tr>
+		<td>7</td>
+		<td data-xy="AG"></td>
+		<td data-xy="BG"></td>
+		<td data-xy="CG"></td>
+		<td data-xy="DG"></td>
+		<td data-xy="EG"></td>
+		<td data-xy="FG"></td>
+		<td data-xy="GG"></td>
+		<td data-xy="HG"></td>
+		<td data-xy="IG"></td>
+		<td data-xy="JG"></td>
+		<td data-xy="KG"></td>
+		<td data-xy="LG"></td>
+		<td data-xy="MG"></td>
+		<td data-xy="NG"></td>
+		<td data-xy="OG"></td>
+		<td data-xy="PG"></td>
+		<td data-xy="QG"></td>
+		<td data-xy="RG"></td>
+		<td data-xy="SG"></td>
+	</tr>
+	<tr>
+		<td>6</td>
+		<td data-xy="AF"></td>
+		<td data-xy="BF"></td>
+		<td data-xy="CF"></td>
+		<td data-xy="DF"></td>
+		<td data-xy="EF"></td>
+		<td data-xy="FF"></td>
+		<td data-xy="GF"></td>
+		<td data-xy="HF"></td>
+		<td data-xy="IF"></td>
+		<td data-xy="JF"></td>
+		<td data-xy="KF"></td>
+		<td data-xy="LF"></td>
+		<td data-xy="MF"></td>
+		<td data-xy="NF"></td>
+		<td data-xy="OF"></td>
+		<td data-xy="PF"></td>
+		<td data-xy="QF"></td>
+		<td data-xy="RF"></td>
+		<td data-xy="SF"></td>
+	</tr>
+	<tr>
+		<td>5</td>
+		<td data-xy="AE"></td>
+		<td data-xy="BE"></td>
+		<td data-xy="CE"></td>
+		<td data-xy="DE"></td>
+		<td data-xy="EE"></td>
+		<td data-xy="FE"></td>
+		<td data-xy="GE"></td>
+		<td data-xy="HE"></td>
+		<td data-xy="IE"></td>
+		<td data-xy="JE"></td>
+		<td data-xy="KE"></td>
+		<td data-xy="LE"></td>
+		<td data-xy="ME"></td>
+		<td data-xy="NE"></td>
+		<td data-xy="OE"></td>
+		<td data-xy="PE"></td>
+		<td data-xy="QE"></td>
+		<td data-xy="RE"></td>
+		<td data-xy="SE"></td>
+	</tr>
+	<tr>
+		<td>4</td>
+		<td data-xy="AD"></td>
+		<td data-xy="BD"></td>
+		<td data-xy="CD"></td>
+		<td data-xy="DD" data-star="1"></td>
+		<td data-xy="ED"></td>
+		<td data-xy="FD"></td>
+		<td data-xy="GD"></td>
+		<td data-xy="HD"></td>
+		<td data-xy="ID"></td>
+		<td data-xy="JD" data-star="1"></td>
+		<td data-xy="KD"></td>
+		<td data-xy="LD"></td>
+		<td data-xy="MD"></td>
+		<td data-xy="ND"></td>
+		<td data-xy="OD"></td>
+		<td data-xy="PD" data-star="1"></td>
+		<td data-xy="QD"></td>
+		<td data-xy="RD"></td>
+		<td data-xy="SD"></td>
+	</tr>
+	<tr>
+		<td>3</td>
+		<td data-xy="AC"></td>
+		<td data-xy="BC"></td>
+		<td data-xy="CC"></td>
+		<td data-xy="DC"></td>
+		<td data-xy="EC"></td>
+		<td data-xy="FC"></td>
+		<td data-xy="GC"></td>
+		<td data-xy="HC"></td>
+		<td data-xy="IC"></td>
+		<td data-xy="JC"></td>
+		<td data-xy="KC"></td>
+		<td data-xy="LC"></td>
+		<td data-xy="MC"></td>
+		<td data-xy="NC"></td>
+		<td data-xy="OC"></td>
+		<td data-xy="PC"></td>
+		<td data-xy="QC"></td>
+		<td data-xy="RC"></td>
+		<td data-xy="SC"></td>
+	</tr>
+	<tr>
+		<td>2</td>
+		<td data-xy="AB"></td>
+		<td data-xy="BB"></td>
+		<td data-xy="CB"></td>
+		<td data-xy="DB"></td>
+		<td data-xy="EB"></td>
+		<td data-xy="FB"></td>
+		<td data-xy="GB"></td>
+		<td data-xy="HB"></td>
+		<td data-xy="IB"></td>
+		<td data-xy="JB"></td>
+		<td data-xy="KB"></td>
+		<td data-xy="LB"></td>
+		<td data-xy="MB"></td>
+		<td data-xy="NB"></td>
+		<td data-xy="OB"></td>
+		<td data-xy="PB"></td>
+		<td data-xy="QB"></td>
+		<td data-xy="RB"></td>
+		<td data-xy="SB"></td>
+	</tr>
+	<tr>
+		<td>1</td>
+		<td data-xy="AA"></td>
+		<td data-xy="BA"></td>
+		<td data-xy="CA"></td>
+		<td data-xy="DA"></td>
+		<td data-xy="EA"></td>
+		<td data-xy="FA"></td>
+		<td data-xy="GA"></td>
+		<td data-xy="HA"></td>
+		<td data-xy="IA"></td>
+		<td data-xy="JA"></td>
+		<td data-xy="KA"></td>
+		<td data-xy="LA"></td>
+		<td data-xy="MA"></td>
+		<td data-xy="NA"></td>
+		<td data-xy="OA"></td>
+		<td data-xy="PA"></td>
+		<td data-xy="QA"></td>
+		<td data-xy="RA"></td>
+		<td data-xy="SA"></td>
+	</tr>
+	<tr>
+		<td data-xy="00"></td>
+		<td>A</td>
+		<td>B</td>
+		<td>C</td>
+		<td>D</td>
+		<td>E</td>
+		<td>F</td>
+		<td>G</td>
+		<td>H</td>
+		<td>I</td>
+		<td>J</td>
+		<td>K</td>
+		<td>L</td>
+		<td>M</td>
+		<td>N</td>
+		<td>O</td>
+		<td>P</td>
+		<td>Q</td>
+		<td>R</td>
+		<td>S</td>
+	</tr>
+</table>
+<canvas width="560" height="560" style="display: none;"></canvas>
+<ul>
+  <li>Black living pieces: <span id="score-black-live">0</span></li>
+  <li>White living pieces: <span id="score-white-live">0</span></li>
+  <li>Black dead pieces: <span id="score-black-dead">0</span></li>
+  <li>White dead pieces: <span id="score-white-dead">0</span></li>
+  <li>Black space: <span id="score-black-space">0</span></li>
+  <li>White space: <span id="score-white-space">0</span></li>
+  <li>Black terrotory: <span id="score-black">0</span></li>
+  <li>White terrotory: <span id="score-white">0</span></li>
+  <li>Point diff: <span id="score-pts">0</span></li>
+</ul>
+<script src="go.js"></script>
+</body>
+</html>

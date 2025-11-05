@@ -18,6 +18,8 @@
   --go-board-foreground: #805030;
   --go-board-white: white;
   --go-board-black: #303030;
+  --chess-board-light: #f1d9c0;
+  --chess-board-dark: #a97a65;
 }
 table.go-board, table.go-board-coord {
   padding: 0;
@@ -28,6 +30,7 @@ table.go-board, table.go-board-coord {
   text-align: center;
   background-color: var(--go-board-background);
   color: var(--go-board-foreground);
+  aspect-ratio: 1 / 1;
 }
 table.go-board tr, table.go-board-coord tr {
   height: 28px;
@@ -116,6 +119,34 @@ table.go-board td:hover , table.go-board-coord td[xy]:hover {
   background-image: radial-gradient(rgba(128, 128, 128, 0.5) 55%, var(--go-board-foreground) 61%, var(--go-board-foreground) 65%, transparent 68%),
     linear-gradient(90deg, transparent 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, transparent 53%),
     linear-gradient(transparent 47%, var(--go-board-foreground) 49%, var(--go-board-foreground) 51%, transparent 53%) !important;
+}
+.chess-container {
+	border-collapse: collapse;
+	width: 100vmin;
+	height: 100vmin;
+}
+.chess-container td {
+	background-color: var(--chess-board-light);
+	cursor: default;
+	font-size: 16px;
+	width: 12.5%;
+	height: 12.5%;
+	text-align: center;
+}
+.chess-white {
+	color: white;
+}
+.chess-black {
+	color: black;
+}
+table.chess-container tr:nth-child(odd) > td:nth-child(even) {
+	background-color: var(--chess-board-dark);
+}
+table.chess-container tr:nth-child(even) > td:nth-child(odd) {
+	background-color: var(--chess-board-dark);
+}
+.chess-highlight {
+	filter: invert(100%);
 }
 .popup {
   position: relative;
