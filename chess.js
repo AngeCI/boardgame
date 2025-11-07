@@ -1,25 +1,11 @@
 "use strict";
 
-HTMLCanvasElement.prototype.getBlob = async function (type = "image/png") {
-  return new Promise((resolve, reject) => {
-    this.toBlob((blob) => {
-      if (blob) {
-        resolve(blob);
-      } else {
-        reject(new Error(`Fail to get blob from canvas: ${this}.`));
-      };
-    }, type);
-  });
-};
-
 let Board = class {
   squares = new Uint8Array(64);
-  cnv = document.createElement("canvas");
+  cnv = new OffscreenCanvas(800, 800);
   ctx; // ctx = cnv.getContext("2d");
 
   constructor() {
-    this.cnv.width = "800";
-    this.cnv.height = "800";
     this.ctx = this.cnv.getContext("2d");
     let colours = ["#f1d9c0", "#a97a65"];
 
@@ -150,7 +136,7 @@ let Board = class {
     };
   };
   getImage() {
-     return this.cnv.getBlob();
+     return this.cnv.convertToBlob();
   };
   whitePiecesBitboard;
   blackPiecesBitboard;

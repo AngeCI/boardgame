@@ -1,19 +1,7 @@
 "use strict";
 
-HTMLCanvasElement.prototype.getBlob = async function (type = "image/png") {
-  return new Promise((resolve, reject) => {
-    this.toBlob((blob) => {
-      if (blob) {
-        resolve(blob);
-      } else {
-        reject(new Error(`Fail to get blob from canvas: ${this}.`));
-      };
-    }, type);
-  });
-};
-
 const board = document.querySelector(".go-board-coord");
-const cnv = document.querySelector("canvas");
+const cnv = new OffscreenCanvas(560, 560);
 const ctx = cnv.getContext("2d");
 let currentPlayer = false; // 0 = black, 1 = white
 let lastPosition = "00";
@@ -143,7 +131,7 @@ let saveFile = (blob, filename = "") => {
 };
 
 let captureImage = async function () {
-  const blob = await cnv.getBlob();
+  const blob = await cnv.convertToBlob();
   await navigator.clipboard.write([new ClipboardItem({[blob.type]: blob})]);
 };
 
