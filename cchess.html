@@ -54,7 +54,7 @@ body {
       <input type="file" id="load-record" />
     </div>
     <div>
-      <label for="load-engine">Load WASM engine:</label>
+      <label for="load-engine">Load WASM UCI/UCCI engine:</label>
       <input type="file" id="load-engine" accept="application/wasm" />
     </div>
     <div>
@@ -76,7 +76,7 @@ body {
     &#32;
     <button id="btn-next">→</button>
     <div class="popup">
-      <button id="capture-btn">Capture Image</button>
+      <button id="image-capture-btn">Capture Image</button>
       <span class="popuptext-below" id="image-capture-popup">Image written to clipboard</span>
     </div>
     <hr />
@@ -90,6 +90,12 @@ body {
       <button id="btn-import-fen">Load FEN string</button>
     </div>
     <div>
+      <div class="popup" style="display: inline;">
+        <button id="textboard-copy-btn">Copy textual board</button>
+        <span class="popuptext-below" id="textboard-copy-popup">String copied</span>
+      </div>
+    </div>
+    <div>
       <label for="textbox-b64moves">Base64 move notation:</label>
       <input type="text" id="textbox-b64moves" />
       <button id="btn-import-b64moves">Parse base64 moves</button>
@@ -101,5 +107,46 @@ body {
   </div>
 </div>
 <script src="cchess.js"></script>
+<script type="text/javascript">
+"use strict";
+
+let boardEl = document.querySelector("table.chess-container tbody");
+let board = new Board();
+
+document.getElementById("image-capture-btn").addEventListener("click", async () => {
+  let blob = await board.getImage();
+  navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+  document.getElementById("image-capture-popup").classList.toggle("show");
+  setTimeout(() => {
+    document.getElementById("image-capture-popup").classList.toggle("show");
+  }, 5000);
+});
+
+document.getElementById("fen-copy-btn").addEventListener("click", () => {
+  navigator.clipboard.writeText(document.getElementById("textbox-fen").value);
+  document.getElementById("fen-copy-popup").classList.toggle("show");
+  setTimeout(() => {
+    document.getElementById("fen-copy-popup").classList.toggle("show");
+  }, 5000);
+});
+
+document.getElementById("btn-import-fen").addEventListener("click", () => {
+  board.importFromFen(document.getElementById("textbox-fen").value);
+  document.getElementById("textbox-b64pos").value = board.toBase64String();
+  board.drawBoard(boardEl);
+});
+
+document.getElementById("textboard-copy-btn").addEventListener("click", () => {
+  navigator.clipboard.writeText(board.toString());
+  document.getElementById("textboard-copy-popup").classList.toggle("show");
+  setTimeout(() => {
+    document.getElementById("textboard-copy-popup").classList.toggle("show");
+  }, 5000);
+});
+
+document.getElementById("btn-import-b64moves").addEventListener("click", () => {
+  board.parseBase64Moves(document.getElementById("textbox-b64moves").value);
+});
+</script>
 </body>
 </html>

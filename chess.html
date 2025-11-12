@@ -49,7 +49,7 @@ body {
       <input type="file" id="load-record" />
     </div>
     <div>
-      <label for="load-engine">Load WASM engine:</label>
+      <label for="load-engine">Load WASM UCI engine:</label>
       <input type="file" id="load-engine" />
     </div>
     <div>
@@ -86,7 +86,7 @@ body {
     </div>
     <div>
       <label for="textbox-b64pos">Custom base64 position format:</label>
-      <input type="text" id="textbox-b64pos" value="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1" />
+      <input type="text" id="textbox-b64pos" />
       <div class="popup" style="display: inline;">
         <button id="b64pos-copy-btn">Copy base64 position</button>
         <span class="popuptext-below" id="b64pos-copy-popup">String copied</span>
@@ -151,7 +151,11 @@ document.getElementById("b64pos-copy-btn").addEventListener("click", () => {
 document.getElementById("btn-import-b64pos").addEventListener("click", () => {
   board.importFromFen(document.getElementById("textbox-b64pos").value);
   document.getElementById("textbox-fen").value = board.getFENString();
-  board.drawBoard(boardEl);
+  try {
+    board.drawBoard(boardEl);
+  } catch (err) {
+    board.drawTextualBoard(boardEl);
+  };
 });
 
 document.getElementById("textboard-copy-btn").addEventListener("click", () => {
