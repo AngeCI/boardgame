@@ -114,6 +114,12 @@ body {
 <script type="text/javascript">
 "use strict";
 
+let sleep = async function (ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+};
+
 let boardEl = document.querySelector("table.chess-container tbody");
 let board = new Board();
 
@@ -176,7 +182,10 @@ if (params.get("fen")) {
   document.getElementById("textbox-fen").value = params.get("fen");
 };
 
-document.getElementById("btn-import-fen").click();
+(async () => {
+  await sleep(500);
+  document.getElementById("btn-import-fen").click();
+})();
 </script>
 </body>
 </html>
