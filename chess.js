@@ -5,8 +5,7 @@ let ChessSpritesImageBitmap = {};
 const ChessSpritesMap = ["wK", "wQ", "wB", "wN", "wR", "wP", "bK", "bQ", "bB", "bN", "bR", "bP"];
 
 (async () => {
-  const parser = new DOMParser();
-  const svgDocument = parser.parseFromString(await (await fetch("img/Chess_Pieces_Sprite.svg")).text(), "image/svg+xml");
+  const svgDocument = new DOMParser().parseFromString(await (await fetch("img/Chess_Pieces_Sprite.svg")).text(), "image/svg+xml");
   const allGroups = svgDocument.querySelectorAll("svg > g");
 
   for (let i = 0; i < allGroups.length; i++) {
