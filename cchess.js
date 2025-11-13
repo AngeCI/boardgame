@@ -1,23 +1,18 @@
 "use strict";
 
-HTMLCanvasElement.prototype.getBlob = async function (type = "image/png") {
-  return new Promise((resolve, reject) => {
-    this.toBlob((blob) => {
-      if (blob) {
-        resolve(blob);
-      } else {
-        reject(new Error(`Fail to get blob from canvas: ${this}.`));
-      };
-    }, type);
-  });
-};
+let CChessSprites = {};
+let CChessSpritesImageBitmap = {};
 
 let Board = class {
-  cnv = new OffscreenCanvas(800, 800);
+  squares = new Uint8Array(256);
+  cnv = new OffscreenCanvas(900, 1200);
   ctx; // ctx = cnv.getContext("2d");
 
   constructor() {
     this.ctx = this.cnv.getContext("2d");
+  };
+
+  redrawCanvas(sprites = CChessSpritesImageBitmap) {
     let img = new Image();
     img.src = "img/cchess_board.svg";
     img.onload = () => {

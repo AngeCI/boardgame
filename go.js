@@ -75,11 +75,12 @@ let initializedBoard = function () {
   ctx.fillStyle = "#805030";
   ctx.strokeStyle = "#ad7643";
   ctx.font = "bold 16px sans-serif";
+  ctx.textAlign = "center";
   ctx.lineWidth = 2;
   ctx.beginPath();
   for (let i = 0; i < 19; i++) {
-    ctx.fillText(String.fromCharCode(i + 65), i * 28 + 37, 551);
-    ctx.fillText(i + 1, 10, 523 - i * 28);
+    ctx.fillText(String.fromCharCode(i + 65), 42 + i * 28, 551);
+    ctx.fillText(i + 1, 14, 523 - i * 28);
 
     ctx.moveTo(42, 518 - i * 28);
     ctx.lineTo(547, 518 - i * 28);

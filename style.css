@@ -140,6 +140,7 @@ table.go-board td:hover , table.go-board-coord td[xy]:hover {
   font-weight: bold;
   width: 12.5%;
   height: 12.5%;
+  padding: 0;
   text-align: center;
 }
 .chess-white {
@@ -194,6 +195,7 @@ tr:nth-child(even) > td.chess-lastmove-dst:nth-child(odd) {
   cursor: default;
   width: 11.1%;
   height: 10%;
+  padding: 0;
   text-align: center;
 }
 .popup {

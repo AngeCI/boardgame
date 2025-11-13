@@ -170,6 +170,12 @@ document.getElementById("btn-import-b64moves").addEventListener("click", () => {
   board.parseBase64Moves(document.getElementById("textbox-b64moves").value);
 });
 
+const params = new URL(location.href).searchParams;
+
+if (params.get("fen")) {
+  document.getElementById("textbox-fen").value = params.get("fen");
+};
+
 document.getElementById("btn-import-fen").click();
 </script>
 </body>

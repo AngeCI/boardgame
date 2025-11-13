@@ -15,14 +15,18 @@ const ChessSpritesMap = ["wK", "wQ", "wB", "wN", "wR", "wP", "bK", "bQ", "bB", "
 
     const newSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     newSvg.setAttribute("viewBox", "0 0 45 45");
-    newSvg.setAttribute("width", "100%");
-    newSvg.setAttribute("height", "100%");
+    newSvg.setAttribute("width", "80%");
+    newSvg.setAttribute("height", "80%");
     newSvg.appendChild(clonedG);
     ChessSprites[ChessSpritesMap[i]] = newSvg;
   };
 
   const spriteImg = new Image();
   spriteImg.src = "img/Chess_Pieces_Sprite.svg";
+  /*
+  spriteImg.width = 600;
+  spriteImg.height = 200;
+  */
   spriteImg.onload = async () => {
     ChessSpritesImageBitmap.wK = await createImageBitmap(spriteImg, 0, 0, 45, 45);
     ChessSpritesImageBitmap.wQ = await createImageBitmap(spriteImg, 45, 0, 45, 45);
