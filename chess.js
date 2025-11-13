@@ -23,23 +23,21 @@ const ChessSpritesMap = ["wK", "wQ", "wB", "wN", "wR", "wP", "bK", "bQ", "bB", "
 
   const spriteImg = new Image();
   spriteImg.src = "img/Chess_Pieces_Sprite.svg";
-  /*
   spriteImg.width = 600;
   spriteImg.height = 200;
-  */
   spriteImg.onload = async () => {
-    ChessSpritesImageBitmap.wK = await createImageBitmap(spriteImg, 0, 0, 45, 45);
-    ChessSpritesImageBitmap.wQ = await createImageBitmap(spriteImg, 45, 0, 45, 45);
-    ChessSpritesImageBitmap.wB = await createImageBitmap(spriteImg, 90, 0, 45, 45);
-    ChessSpritesImageBitmap.wN = await createImageBitmap(spriteImg, 135, 0, 45, 45);
-    ChessSpritesImageBitmap.wR = await createImageBitmap(spriteImg, 180, 0, 45, 45);
-    ChessSpritesImageBitmap.wP = await createImageBitmap(spriteImg, 225, 0, 45, 45);
-    ChessSpritesImageBitmap.bK = await createImageBitmap(spriteImg, 0, 45, 45, 45);
-    ChessSpritesImageBitmap.bQ = await createImageBitmap(spriteImg, 45, 45, 45, 45);
-    ChessSpritesImageBitmap.bB = await createImageBitmap(spriteImg, 90, 45, 45, 45);
-    ChessSpritesImageBitmap.bN = await createImageBitmap(spriteImg, 135, 45, 45, 45);
-    ChessSpritesImageBitmap.bR = await createImageBitmap(spriteImg, 180, 45, 45, 45);
-    ChessSpritesImageBitmap.bP = await createImageBitmap(spriteImg, 225, 45, 45, 45);
+    ChessSpritesImageBitmap.wK = await createImageBitmap(spriteImg, 0, 0, 100, 100);
+    ChessSpritesImageBitmap.wQ = await createImageBitmap(spriteImg, 100, 0, 100, 100);
+    ChessSpritesImageBitmap.wB = await createImageBitmap(spriteImg, 200, 0, 100, 100);
+    ChessSpritesImageBitmap.wN = await createImageBitmap(spriteImg, 300, 0, 100, 100);
+    ChessSpritesImageBitmap.wR = await createImageBitmap(spriteImg, 400, 0, 100, 100);
+    ChessSpritesImageBitmap.wP = await createImageBitmap(spriteImg, 500, 0, 100, 100);
+    ChessSpritesImageBitmap.bK = await createImageBitmap(spriteImg, 0, 100, 100, 100);
+    ChessSpritesImageBitmap.bQ = await createImageBitmap(spriteImg, 100, 100, 100, 100);
+    ChessSpritesImageBitmap.bB = await createImageBitmap(spriteImg, 200, 100, 100, 100);
+    ChessSpritesImageBitmap.bN = await createImageBitmap(spriteImg, 300, 100, 100, 100);
+    ChessSpritesImageBitmap.bR = await createImageBitmap(spriteImg, 400, 100, 100, 100);
+    ChessSpritesImageBitmap.bP = await createImageBitmap(spriteImg, 500, 100, 100, 100);
   };
 })();
 
