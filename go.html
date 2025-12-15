@@ -7,8 +7,11 @@
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-<button id="reset-btn">Reset board</button>
-<button id="capture-btn">Capture Image</button>
+<label for="board-size">Board size: </label><input type="number" id="board-size" value="19" min="3" max="19" /><button id="reset-btn">Reset board</button>
+<div class="popup">
+  <button id="capture-btn">Capture Image</button>
+  <span class="popuptext-below" id="image-capture-popup">Image written to clipboard</span>
+</div>
 <table class="go-board-coord">
 	<tr>
 		<td>19</td>
