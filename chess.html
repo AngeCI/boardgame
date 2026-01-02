@@ -108,6 +108,12 @@ body {
       <p>Comments:</p>
       <textarea id="textbox-comments"></textarea>
     </div>
+    <hr />
+    <p style="text-align: center;">
+      <a href="/docs/boardgame/chess.html">Help</a>
+      &nbsp;·&nbsp;
+      <a href="index.html">Return to Homepage</a>
+    </p>
   </div>
 </div>
 <script src="chess.js"></script>
@@ -155,13 +161,9 @@ document.getElementById("b64pos-copy-btn").addEventListener("click", () => {
 });
 
 document.getElementById("btn-import-b64pos").addEventListener("click", () => {
-  board.importFromFen(document.getElementById("textbox-b64pos").value);
+  board.importFromBase64(document.getElementById("textbox-b64pos").value);
   document.getElementById("textbox-fen").value = board.getFENString();
-  try {
-    board.drawBoard(boardEl);
-  } catch (err) {
-    board.drawTextualBoard(boardEl);
-  };
+  board.drawBoard(boardEl);
 });
 
 document.getElementById("textboard-copy-btn").addEventListener("click", () => {
@@ -180,6 +182,10 @@ const params = new URL(location.href).searchParams;
 
 if (params.get("fen")) {
   document.getElementById("textbox-fen").value = params.get("fen");
+};
+
+if (params.get("b64pos")) {
+  document.getElementById("textbox-b64pos").value = params.get("b64pos");
 };
 
 (async () => {

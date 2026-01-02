@@ -20,10 +20,8 @@ const ChessSpritesMap = ["wK", "wQ", "wB", "wN", "wR", "wP", "bK", "bQ", "bB", "
     ChessSprites[ChessSpritesMap[i]] = newSvg;
   };
 
-  const spriteImg = new Image();
+  const spriteImg = new Image(600, 200);
   spriteImg.src = "img/Chess_Pieces_Sprite.svg";
-  spriteImg.width = 600;
-  spriteImg.height = 200;
   spriteImg.onload = async () => {
     ChessSpritesImageBitmap.wK = await createImageBitmap(spriteImg, 0, 0, 100, 100);
     ChessSpritesImageBitmap.wQ = await createImageBitmap(spriteImg, 100, 0, 100, 100);
@@ -70,18 +68,17 @@ let Board = class {
   importFromFen(fen) {
     this.squares.fill(0, 0);
     const pieceTypeTable = {
-      "k" : Piece.KING,
-      "q" : Piece.QUEEN,
-      "r" : Piece.ROOK,
-      "n" : Piece.KNIGHT,
-      "b" : Piece.BISHOP,
-      "p" : Piece.PAWN
+      "k": Piece.KING,
+      "q": Piece.QUEEN,
+      "r": Piece.ROOK,
+      "n": Piece.KNIGHT,
+      "b": Piece.BISHOP,
+      "p": Piece.PAWN
     };
 
     const board = fen.split(" ")[0];
     let file = 0, rank = 0;
-    for (let symbol in board) {
-      symbol = board[symbol];
+    for (let symbol of board) {
       if (symbol == "/") {
         file = 0;
         rank++;
@@ -102,11 +99,12 @@ let Board = class {
   importFromBase64(str) {
     const binArray = atob(str);
     for (let i = 0; i < binArray.length; i++) {
-        let a = str.charCodeAt(i);
-        for (let j = 0; j < 2; j++) {
-            this.squares[i << 1 | j] = ((a & 0xf0) >> 4) + 8;
-            a <<= 4;
-        }
+      let a = binArray.charCodeAt(i);
+      for (let j = 0; j < 2; j++) {
+        const nibble = (a & 0xf0) >> 4;
+        this.squares[i << 1 | j] = nibble + ((nibble > 0) << 3);
+        a <<= 4;
+      };
     };
 
     this.redrawCanvas();
@@ -160,9 +158,15 @@ let Board = class {
   toBase64String() {
     let arr = new Uint8Array(32);
     for (let i = 0; i < 32; i++) {
-      arr[i] = (this.squares[i << 1] << 4) + this.squares[i << 1 | 1] - 136;
+      const s1 = this.squares[i << 1];
+      const s2 = this.squares[i << 1 | 1];
+
+      const high = s1 - ((s1 > 0) << 3);
+      const low = s2 - ((s2 > 0) << 3);
+
+      arr[i] = (high << 4) | low;
     };
-    return btoa(Array.from(arr, (b) => String.fromCodePoint(b)).join(""));
+    return btoa(String.fromCharCode.apply(null, arr)).slice(0, -1); // remove the trailing '='
   };
   getPieceBitboard(type, isWhite) {
     
@@ -228,7 +232,7 @@ let Piece = {
   "BLACK": 16,
 
   "isSlidingPiece": function (piece) {
-    return piece;
+    return (44 >> (piece & 7)) & 1;
   },
   "isColour": function (piece) {
     return piece >> 3;

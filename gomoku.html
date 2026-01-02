@@ -7,10 +7,34 @@
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-<button id="reset-btn">Reset board</button>
-<div class="popup">
-  <button id="capture-btn">Capture Image</button>
-  <span class="popuptext-below" id="image-capture-popup">Image written to clipboard</span>
+<div>
+  <p>Current mode:</p>
+  <input type="radio" id="btn-viewmode" name="mode" />
+  <label for="btn-viewmode">View</label>
+  <input type="radio" id="btn-editmode" name="mode" />
+  <label for="btn-editmode">Edit</label>
+  <input type="radio" id="btn-matchmode" name="mode" checked />
+  <label for="btn-matchmode">Match</label>
+</div>
+<div>
+  <button id="reset-btn">Reset board</button>
+  <div class="popup">
+    <button id="capture-btn">Capture Image</button>
+    <span class="popuptext-below" id="image-capture-popup">Image written to clipboard</span>
+  </div>
+</div>
+<div id="edit-mode-piece-select" style="display: none;">
+  <svg xmlns="http://www.w3.org/2000/svg" id="edit-black" viewBox="0 0 16 16" width="32" height="32">
+    <circle cx="8" cy="8" r="7" stroke="black" fill="black" />
+  </svg>
+  <svg xmlns="http://www.w3.org/2000/svg" id="edit-white" viewBox="0 0 16 16" width="32" height="32">
+    <circle cx="8" cy="8" r="7" stroke="black" fill="white" />
+  </svg>
+</div>
+<div>
+  <label for="settings">Settings: </label>
+  <input type="text" id="settings" />
+  <button id="import-settings-btn">Import settings</button>
 </div>
 <table class="go-board-coord">
 	<tr>
@@ -302,6 +326,24 @@
 		<td>O</td>
 	</tr>
 </table>
+<hr />
+<p style="text-align: center;">
+<a href="/docs/boardgame/gomoku.html">Help</a>
+&nbsp;·&nbsp;
+<a href="index.html">Return to Homepage</a>
+</p>
 <script src="gomoku.js"></script>
+<script type="text/javascript">
+"use strict";
+
+document.getElementById("import-settings-btn").addEventListener("click", () => {});
+
+const params = new URL(location.href).searchParams;
+
+if (params.get("s")) {
+  document.getElementById("settings").value = params.get("s");
+  document.getElementById("import-settings-btn").click();
+};
+</script>
 </body>
 </html>
