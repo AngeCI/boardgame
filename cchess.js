@@ -14,8 +14,8 @@ const CChessSpritesMap = ["rK", "rA", "rB", "rN", "rR", "rC", "rP", "bK", "bA", 
 
     const newSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     newSvg.setAttribute("viewBox", "0 0 100 100");
-    newSvg.setAttribute("width", "80%");
-    newSvg.setAttribute("height", "80%");
+    newSvg.setAttribute("width", "100%");
+    newSvg.setAttribute("height", "100%");
     newSvg.appendChild(clonedG);
     CChessSprites[CChessSpritesMap[i]] = newSvg;
   };
@@ -64,10 +64,10 @@ let Board = class {
 
     for (let y = this.#RANK_TOP; y < this.#RANK_BOTTOM + 1; y++) {
       for (let x = this.#FILE_LEFT; x < this.#FILE_RIGHT + 1; x++) {
-        pieceNum = this.#squares[y * 9 + x] - 8;
+        pieceNum = this.#squares[(y << 4) + x] - 8;
         let sprite = sprites[labels[pieceNum]];
         if (sprite) {
-          this.#ctx.drawImage(sprite, x * 100, y * 100, 100, 100);
+          this.#ctx.drawImage(sprite, (x - 3) * 100, (y - 2) * 100, 100, 100);
         };
       };
     };
@@ -128,14 +128,14 @@ let Board = class {
   toString() {
     const pieceTable = " 1234567.KABNRCP.kabnrcp";
     const rowMargin = "+---+---+---+---+---+---+---+---+---+\n";
-    let output = rowMargin;
+    let output = "  1  2  3  4  5  6  7  8  9  " + rowMargin;
 
     for (let i = this.#RANK_TOP; i < this.#RANK_BOTTOM + 1; i++) {
       for (let j = this.#FILE_LEFT; j < this.#FILE_RIGHT + 1; j++) {
-        output += `| ${pieceTable[this.#squares[i * 9 + j]]} `;
+        output += `| ${pieceTable[this.#squares[(i << 4) + j]]} `;
       };
 
-      output += `| ${10 - i}\n`;
+      output += `| ${13 - i}\n`;
       output += rowMargin;
     };;
 
@@ -148,7 +148,7 @@ let Board = class {
 
     for (let i = this.#RANK_TOP; i < this.#RANK_BOTTOM + 1; i++) {
       for (let j = this.#FILE_LEFT; j < this.#FILE_RIGHT + 1; j++) {
-        let piece = this.#squares[i * 9 + j];
+        let piece = this.#squares[(i << 4) + j];
         if (piece != 0) {
           if (emptySquareCounter > 0) {
             output += emptySquareCounter;
@@ -165,7 +165,7 @@ let Board = class {
           emptySquareCounter = 0;
         };
 
-      if (i < this.#FILE_RIGHT)
+      if (i < this.#RANK_BOTTOM)
         output += "/";
     };
 
