@@ -90,6 +90,15 @@ body {
       <button id="btn-import-fen">Load FEN string</button>
     </div>
     <div>
+      <label for="textbox-b64pos">Custom base64 position format:</label>
+      <input type="text" id="textbox-b64pos" value="3LqavNAAAAAADgAADg8PDw8PAAAAAAAAAAAAcHBwcHBgAABgAAAAAAVDISNF" />
+      <div class="popup" style="display: inline;">
+        <button id="b64pos-copy-btn">Copy base64 position</button>
+        <span class="popuptext-below" id="b64pos-copy-popup">String copied</span>
+      </div>
+      <button id="btn-import-b64pos">Load base64 position</button>
+    </div>
+    <div>
       <div class="popup" style="display: inline;">
         <button id="textboard-copy-btn">Copy textual board</button>
         <span class="popuptext-below" id="textboard-copy-popup">String copied</span>
@@ -116,7 +125,13 @@ body {
 <script type="text/javascript">
 "use strict";
 
-let boardEl = document.querySelector("table.chess-container tbody");
+let sleep = async function (ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+};
+
+let boardEl = document.querySelector("table.cchess-container tbody");
 let board = new Board();
 
 document.getElementById("image-capture-btn").addEventListener("click", async () => {
@@ -142,6 +157,20 @@ document.getElementById("btn-import-fen").addEventListener("click", () => {
   board.drawBoard(boardEl);
 });
 
+document.getElementById("b64pos-copy-btn").addEventListener("click", () => {
+  navigator.clipboard.writeText(document.getElementById("textbox-b64pos").value);
+  document.getElementById("b64pos-copy-popup").classList.toggle("show");
+  setTimeout(() => {
+    document.getElementById("b64pos-copy-popup").classList.toggle("show");
+  }, 5000);
+});
+
+document.getElementById("btn-import-b64pos").addEventListener("click", () => {
+  board.importFromBase64(document.getElementById("textbox-b64pos").value);
+  document.getElementById("textbox-fen").value = board.getFENString();
+  board.drawBoard(boardEl);
+});
+
 document.getElementById("textboard-copy-btn").addEventListener("click", () => {
   navigator.clipboard.writeText(board.toString());
   document.getElementById("textboard-copy-popup").classList.toggle("show");
@@ -153,6 +182,27 @@ document.getElementById("textboard-copy-btn").addEventListener("click", () => {
 document.getElementById("btn-import-b64moves").addEventListener("click", () => {
   board.parseBase64Moves(document.getElementById("textbox-b64moves").value);
 });
+
+const params = new URL(location.href).searchParams;
+
+if (params.get("fen")) {
+  document.getElementById("textbox-fen").value = params.get("fen");
+};
+
+if (params.get("b64pos")) {
+  document.getElementById("textbox-b64pos").value = params.get("b64pos");
+  (async () => {
+    await sleep(500);
+    document.getElementById("btn-import-b64pos").click();
+  })();
+};
+
+if (params.size === 0 || params.get("fen")) {
+  (async () => {
+    await sleep(500);
+    document.getElementById("btn-import-fen").click();
+  })();
+};
 </script>
 </body>
 </html>

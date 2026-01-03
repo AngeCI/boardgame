@@ -151,7 +151,7 @@ let Board = class {
       if (neighbor === 65535) continue;
       if (clone.getColor(neighbor) === originalColor) {
         if (stones.indexOf(neighbor) == -1) {
-          stones.push(...this.getChainPoints(neighbor));
+          stones.push(...clone.getChainPoints(neighbor));
         };
       }
     };

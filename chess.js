@@ -39,12 +39,12 @@ const ChessSpritesMap = ["wK", "wQ", "wB", "wN", "wR", "wP", "bK", "bQ", "bB", "
 })();
 
 let Board = class {
-  squares = new Uint8Array(64);
-  cnv = new OffscreenCanvas(800, 800);
-  ctx; // ctx = cnv.getContext("2d");
+  #squares = new Uint8Array(64);
+  #cnv = new OffscreenCanvas(800, 800);
+  #ctx; // #ctx = #cnv.getContext("2d");
 
   constructor() {
-    this.ctx = this.cnv.getContext("2d");
+    this.#ctx = this.#cnv.getContext("2d");
   };
 
   redrawCanvas(sprites = ChessSpritesImageBitmap) {
@@ -54,19 +54,19 @@ let Board = class {
 
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
-        this.ctx.fillStyle = colours[(y ^ x) & 1];
-        this.ctx.fillRect(x * 100, y * 100, 100, 100);
+        this.#ctx.fillStyle = colours[(y ^ x) & 1];
+        this.#ctx.fillRect(x * 100, y * 100, 100, 100);
 
-        pieceNum = this.squares[(y << 3) + x] - 8;
+        pieceNum = this.#squares[(y << 3) + x] - 8;
         let sprite = sprites[labels[pieceNum]];
         if (sprite) {
-          this.ctx.drawImage(sprite, x * 100, y * 100, 100, 100);
+          this.#ctx.drawImage(sprite, x * 100, y * 100, 100, 100);
         };
       };
     };
   };
   importFromFen(fen) {
-    this.squares.fill(0, 0);
+    this.#squares.fill(0, 0);
     const pieceTypeTable = {
       "k": Piece.KING,
       "q": Piece.QUEEN,
@@ -88,7 +88,7 @@ let Board = class {
         } else {
           let pieceColour = symbol.charCodeAt(0) < 96 ? Piece.WHITE : Piece.BLACK;
           let pieceType = pieceTypeTable[symbol.toLowerCase()];
-          this.squares[(rank << 3) + file] = pieceType | pieceColour;
+          this.#squares[(rank << 3) + file] = pieceType | pieceColour;
           file++;
         };
       };
@@ -102,7 +102,7 @@ let Board = class {
       let a = binArray.charCodeAt(i);
       for (let j = 0; j < 2; j++) {
         const nibble = (a & 0xf0) >> 4;
-        this.squares[i << 1 | j] = nibble + ((nibble > 0) << 3);
+        this.#squares[i << 1 | j] = nibble + ((nibble > 0) << 3);
         a <<= 4;
       };
     };
@@ -116,7 +116,7 @@ let Board = class {
 
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
-        output += `| ${pieceTable[this.squares[(i << 3) + j]]} `;
+        output += `| ${pieceTable[this.#squares[(i << 3) + j]]} `;
       };
 
       output += `| ${8 - i}\n`;
@@ -132,7 +132,7 @@ let Board = class {
 
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
-        let piece = this.squares[(i << 3) + j];
+        let piece = this.#squares[(i << 3) + j];
         if (piece != 0) {
           if (emptySquareCounter > 0) {
             output += emptySquareCounter;
@@ -158,8 +158,8 @@ let Board = class {
   toBase64String() {
     let arr = new Uint8Array(32);
     for (let i = 0; i < 32; i++) {
-      const s1 = this.squares[i << 1];
-      const s2 = this.squares[i << 1 | 1];
+      const s1 = this.#squares[i << 1];
+      const s2 = this.#squares[i << 1 | 1];
 
       const high = s1 - ((s1 > 0) << 3);
       const low = s2 - ((s2 > 0) << 3);
@@ -180,7 +180,7 @@ let Board = class {
       boardGrids = boardRows[i].children;
       for (let j = 0; j < 8; j++) {
         boardGrids[j].innerHTML = "";
-        pieceNum = this.squares[(i << 3) + j] - 8;
+        pieceNum = this.#squares[(i << 3) + j] - 8;
         let sprite = sprites[labels[pieceNum]];
         if (sprite) {
           boardGrids[j].appendChild(sprite.cloneNode(true));
@@ -196,7 +196,7 @@ let Board = class {
     for (let i = 0; i < 8; i++) {
       boardGrids = boardRows[i].children;
       for (let j = 0; j < 8; j++) {
-        pieceNum = this.squares[(i << 3) + j];
+        pieceNum = this.#squares[(i << 3) + j];
         pieceType = pieceNum & 7;
         pieceColor = ((pieceNum >> 3) & 3) - 1;
         boardGrids[j].innerText = labels[pieceType];
@@ -211,7 +211,7 @@ let Board = class {
     };
   };
   getImage() {
-     return this.cnv.convertToBlob();
+     return this.#cnv.convertToBlob();
   };
   whitePiecesBitboard;
   blackPiecesBitboard;

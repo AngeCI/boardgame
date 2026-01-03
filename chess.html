@@ -186,12 +186,18 @@ if (params.get("fen")) {
 
 if (params.get("b64pos")) {
   document.getElementById("textbox-b64pos").value = params.get("b64pos");
+  (async () => {
+    await sleep(500);
+    document.getElementById("btn-import-b64pos").click();
+  })();
 };
 
-(async () => {
-  await sleep(500);
-  document.getElementById("btn-import-fen").click();
-})();
+if (params.size === 0 || params.get("fen")) {
+  (async () => {
+    await sleep(500);
+    document.getElementById("btn-import-fen").click();
+  })();
+};
 </script>
 </body>
 </html>
