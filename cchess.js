@@ -128,7 +128,7 @@ let Board = class {
   toString() {
     const pieceTable = " 1234567.KABNRCP.kabnrcp";
     const rowMargin = "+---+---+---+---+---+---+---+---+---+\n";
-    let output = "  1  2  3  4  5  6  7  8  9  " + rowMargin;
+    let output = "  1   2   3   4   5   6   7   8   9  \n" + rowMargin;
 
     for (let i = this.#RANK_TOP; i < this.#RANK_BOTTOM + 1; i++) {
       for (let j = this.#FILE_LEFT; j < this.#FILE_RIGHT + 1; j++) {

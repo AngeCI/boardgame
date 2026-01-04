@@ -43,8 +43,38 @@ let Board = class {
   #cnv = new OffscreenCanvas(800, 800);
   #ctx; // #ctx = #cnv.getContext("2d");
 
+  isWhiteToMove;
+  plyCount;
+  moves;
+
+  // Piece lists
+  #pieceLists = [];
+  #whiteKings = [];
+  #whiteQueens = [];
+  #whiteRooks = [];
+  #whiteKnights = [];
+  #whiteBishops = [];
+  #whitePawns = [];
+  #blackKings = [];
+  #blackQueens = [];
+  #blackRooks = [];
+  #blackKnights = [];
+  #blackBishops = [];
+  #blackPawns = [];
+
+  // Bitboards
+  pieceBitboards;
+  colourBitboards;
+  allPiecesBitboard;
+  FriendlyOrthogonalSliders;
+  FriendlyDiagonalSliders;
+  EnemyOrthogonalSliders;
+  EnemyDiagonalSliders;
+
   constructor() {
     this.#ctx = this.#cnv.getContext("2d");
+    this.moves = [];
+    this.plyCount = 0;
   };
 
   redrawCanvas(sprites = ChessSpritesImageBitmap) {
@@ -65,6 +95,20 @@ let Board = class {
       };
     };
   };
+  refreshPieceList() {
+    /*
+    const pieceListTable = [
+      null, null, null, null, null, null, null, null,
+      null, this.#whiteKing, this.#whiteQueen, this.#whiteRook, this.#whiteKnight, this.#whiteBishop, this.#whitePawn, null,
+      null, this.#blackKing, this.#blackQueen, this.#blackRook, this.#blackKnight, this.#blackBishop, this.#blackPawn, null,
+    ];
+    let i = 0;
+    for (const piece of this.#squares) {
+      pieceListTable[piece]?.push(i);
+      i++;
+    };
+    */
+  };
   importFromFen(fen) {
     this.#squares.fill(0, 0);
     const pieceTypeTable = {
@@ -76,7 +120,7 @@ let Board = class {
       "p": Piece.PAWN
     };
 
-    const board = fen.split(" ")[0];
+    const [board, moveSide, , , , plyCount] = fen.split(" ");
     let file = 0, rank = 0;
     for (let symbol of board) {
       if (symbol == "/") {
@@ -94,7 +138,11 @@ let Board = class {
       };
     };
 
+    this.isWhiteToMove = !(moveSide == "b");
+    this.plyCount = parseInt(plyCount);
+
     this.redrawCanvas();
+    this.refreshPieceList();
   };
   importFromBase64(str) {
     const binArray = atob(str);
@@ -108,6 +156,7 @@ let Board = class {
     };
 
     this.redrawCanvas();
+    this.refreshPieceList();
   };
   toString() {
     const pieceTable = " 1234567.KQRNBP..kqrnbp.";
@@ -168,10 +217,49 @@ let Board = class {
     };
     return btoa(String.fromCharCode.apply(null, arr)).slice(0, -1); // remove the trailing '='
   };
+  getPiece(square) {
+    return this.#squares[square];
+  };
+  getPieceList(pieceType, color) {
+    color = (color >> 3) - 1;
+    switch (pieceType) {
+      case Piece.KING:
+        return color ? this.#blackKings : this.#whiteKings;
+        break;
+      case Piece.QUEEN:
+        return color ? this.#blackQueens : this.#whiteQueens;
+        break;
+      case Piece.ROOK:
+        return color ? this.#blackRooks : this.#whiteRooks;
+        break;
+      case Piece.KNIGHT:
+        return color ? this.#blackKnights : this.#whiteKnights;
+        break;
+      case Piece.BISHOP:
+        return color ? this.#blackBishops : this.#whiteBishops;
+        break;
+      case Piece.PAWN:
+        return color ? this.#blackPawns : this.#whitePawns;
+        break;
+      default:
+        throw new TypeError();
+        break;
+    };
+  };
+  getAllPieceLists() {
+    return {
+      "king": [this.#whiteKings, this.#blackKings],
+      "queen": [this.#whiteQueens, this.#blackQueens],
+      "rook": [this.#whiteRooks, this.#blackRooks],
+      "knight": [this.#whiteKnights, this.#blackKnights],
+      "bishop": [this.#whiteBishops, this.#blackBishops],
+      "pawn": [this.#whitePawns, this.#blackPawns]
+    };
+  };
   getPieceBitboard(type, isWhite) {
     
   };
-  drawBoard(boardEl, sprites = ChessSprites) {
+  drawBoard(boardEl, sprites = ChessSprites, rotated = false) {
     const labels = [" ", "wK", "wQ", "wR", "wN", "wB", "wP", " ", " ", "bK", "bQ", "bR", "bN", "bB", "bP", " "];
     const boardRows = boardEl.children;
     let boardGrids, pieceNum;
@@ -180,7 +268,7 @@ let Board = class {
       boardGrids = boardRows[i].children;
       for (let j = 0; j < 8; j++) {
         boardGrids[j].innerHTML = "";
-        pieceNum = this.#squares[(i << 3) + j] - 8;
+        pieceNum = this.#squares[rotated ? (63 - (i << 3) - j) : ((i << 3) + j)] - 8;
         let sprite = sprites[labels[pieceNum]];
         if (sprite) {
           boardGrids[j].appendChild(sprite.cloneNode(true));
@@ -188,7 +276,7 @@ let Board = class {
       };
     };
   };
-  drawTextualBoard(boardEl) {
+  drawTextualBoard(boardEl, rotated = false) {
     const labels = " KQRNBPX";
     const boardRows = boardEl.children;
     let boardGrids, pieceNum, pieceType, pieceColor;
@@ -196,7 +284,7 @@ let Board = class {
     for (let i = 0; i < 8; i++) {
       boardGrids = boardRows[i].children;
       for (let j = 0; j < 8; j++) {
-        pieceNum = this.#squares[(i << 3) + j];
+        pieceNum = this.#squares[rotated ? (63 - (i << 3) - j) : ((i << 3) + j)];
         pieceType = pieceNum & 7;
         pieceColor = ((pieceNum >> 3) & 3) - 1;
         boardGrids[j].innerText = labels[pieceType];
@@ -212,6 +300,12 @@ let Board = class {
   };
   getImage() {
      return this.#cnv.convertToBlob();
+  };
+  makeMove(move) {
+
+  };
+  undoMove(move) {
+
   };
   whitePiecesBitboard;
   blackPiecesBitboard;
