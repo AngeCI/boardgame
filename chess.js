@@ -259,7 +259,7 @@ let Board = class {
   getPieceBitboard(type, isWhite) {
     
   };
-  drawBoard(boardEl, sprites = ChessSprites, rotated = false) {
+  drawBoard(boardEl, rotated = false, sprites = ChessSprites) {
     const labels = [" ", "wK", "wQ", "wR", "wN", "wB", "wP", " ", " ", "bK", "bQ", "bR", "bN", "bB", "bP", " "];
     const boardRows = boardEl.children;
     let boardGrids, pieceNum;
@@ -306,6 +306,9 @@ let Board = class {
   };
   undoMove(move) {
 
+  };
+  setPiece(index, newPiece) {
+    this.#squares[index] = newPiece;
   };
   whitePiecesBitboard;
   blackPiecesBitboard;
@@ -411,6 +414,7 @@ let bitboardToString = function (bitboard) {
   return bitboard.toString(2).padStart(64, "0").match(/.{8}/g).join("\n");
 };
 
+/*
 const BitboardHelperObj = await WebAssembly.instantiateStreaming(fetch("data:application/wasm;base64,"));
 const BitboardHelper = {
   "genPawnMoves": BitboardHelperObj.instance.exports.a,
@@ -424,3 +428,4 @@ const BitboardHelper = {
   "clearAndGetIndexOfLSB": BitboardHelperObj.instance.exports.j,
   "getNumberOfSetBits": BitboardHelperObj.instance.exports.k
 };
+*/

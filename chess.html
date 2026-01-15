@@ -34,14 +34,14 @@ body {
 <div id="grid">
   <div></div>
   <table class="chess-container">
-    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td data-index="0"></td><td data-index="1"></td><td data-index="2"></td><td data-index="3"></td><td data-index="4"></td><td data-index="5"></td><td data-index="6"></td><td data-index="7"></td></tr>
+    <tr><td data-index="8"></td><td data-index="9"></td><td data-index="10"></td><td data-index="11"></td><td data-index="12"></td><td data-index="13"></td><td data-index="14"></td><td data-index="15"></td></tr>
+    <tr><td data-index="16"></td><td data-index="17"></td><td data-index="18"></td><td data-index="19"></td><td data-index="20"></td><td data-index="21"></td><td data-index="22"></td><td data-index="23"></td></tr>
+    <tr><td data-index="24"></td><td data-index="25"></td><td data-index="26"></td><td data-index="27"></td><td data-index="28"></td><td data-index="29"></td><td data-index="30"></td><td data-index="31"></td></tr>
+    <tr><td data-index="32"></td><td data-index="33"></td><td data-index="34"></td><td data-index="35"></td><td data-index="36"></td><td data-index="37"></td><td data-index="38"></td><td data-index="39"></td></tr>
+    <tr><td data-index="40"></td><td data-index="41"></td><td data-index="42"></td><td data-index="43"></td><td data-index="44"></td><td data-index="45"></td><td data-index="46"></td><td data-index="47"></td></tr>
+    <tr><td data-index="48"></td><td data-index="49"></td><td data-index="50"></td><td data-index="51"></td><td data-index="52"></td><td data-index="53"></td><td data-index="54"></td><td data-index="55"></td></tr>
+    <tr><td data-index="56"></td><td data-index="57"></td><td data-index="58"></td><td data-index="59"></td><td data-index="60"></td><td data-index="61"></td><td data-index="62"></td><td data-index="63d"></td></tr>
   </table>
   <div>
     <div>
@@ -194,7 +194,9 @@ let sleep = async function (ms) {
 
 let boardEl = document.querySelector("table.chess-container tbody");
 let board = new Board();
+let currentMode = 0; // 0: view, 1: edit, 2: match
 let currentPickedPiece = 14;
+let boardRotated = false;
 
 board.fillGameStates = function () {
   if (this.isWhiteToMove) {
@@ -209,45 +211,38 @@ board.fillGameStates = function () {
 
 const boardEdit = function (ev) {
   const grid = ev.target;
+  const {index} = ev.target.dataset;
+
   // Put/erase the piece onto the board object
-  board.setPiece(currentPickedPiece, grid);
+  if (boardRotated) {
+    board.setPiece(63 - index, currentPickedPiece);
+  } else {
+    board.setPiece(index, currentPickedPiece);
+  };
+
   // Recalculate the textual boards
   document.getElementById("textbox-fen").value = board.getFENString();
   document.getElementById("textbox-b64pos").value = board.toBase64String();
+  board.drawBoard(boardEl, boardRotated);
 };
 
 const boardMatch = function (ev) {};
 
-const resetBoardListeners = function (mode) {
-  switch (mode) {
-    case 0: // view mode
-      for (const tr of boardEl.children) {
-        for (const td of tr.children) {
-          td.removeEventListener("click", boardEdit);
-          td.removeEventListener("click", boardMatch);
-        };
-      };
-      break;
-    case 1: // edit mode
-      for (const tr of boardEl.children) {
-        for (const td of tr.children) {
-          td.removeEventListener("click", boardMatch);
-          td.addEventListener("click", boardEdit);
-        };
-      };
-      break;
-    case 2: // match mode
-      for (const tr of boardEl.children) {
-        for (const td of tr.children) {
-          td.removeEventListener("click", boardEdit);
-          td.addEventListener("click", boardMatch);
-        };
-      };
-      break;
-    default:
-      throw new TypeError();
-      break;
-  }
+boardEl.addEventListener("click", (ev) => {
+  const td = ev.target.closest("td");
+  if (!td || currentMode === 0) return;
+
+  // Route to the correct function based on mode
+  if (currentMode === 1) { // edit mode
+    boardEdit.call(td, ev); // .call(td) preserves the 'this' context if needed
+  } else if (currentMode === 2) { // match mode
+    boardMatch.call(td, ev);
+  };
+});
+
+const setMode = function (mode) {
+  currentMode = mode;
+  boardEl.classList.add(`mode-${mode}`);
 };
 
 document.getElementById("btn-viewmode").addEventListener("input", () => {
@@ -260,7 +255,7 @@ document.getElementById("btn-viewmode").addEventListener("input", () => {
   document.getElementById("castling-right-black-long").disabled = true;
   document.getElementById("ep-target").disabled = true;
 
-  resetBoardListeners(0);
+  setMode(0);
 });
 
 document.getElementById("btn-editmode").addEventListener("input", () => {
@@ -273,7 +268,7 @@ document.getElementById("btn-editmode").addEventListener("input", () => {
   document.getElementById("castling-right-black-long").disabled = false;
   document.getElementById("ep-target").disabled = false;
 
-  resetBoardListeners(1);
+  setMode(1);
 });
 
 document.getElementById("btn-matchmode").addEventListener("input", () => {
@@ -286,7 +281,7 @@ document.getElementById("btn-matchmode").addEventListener("input", () => {
   document.getElementById("castling-right-black-long").disabled = true;
   document.getElementById("ep-target").disabled = true;
 
-  resetBoardListeners(2);
+  setMode(2);
 });
 
 document.getElementById("image-capture-btn").addEventListener("click", async () => {
@@ -299,7 +294,8 @@ document.getElementById("image-capture-btn").addEventListener("click", async () 
 });
 
 document.getElementById("rotate-board").addEventListener("input", (ev) => {
-  board.drawBoard(boardEl, ChessSprites, ev.target.checked);
+  boardRotated = !boardRotated;
+  board.drawBoard(boardEl, boardRotated);
 });
 
 document.getElementById("fen-copy-btn").addEventListener("click", async () => {
@@ -313,7 +309,7 @@ document.getElementById("fen-copy-btn").addEventListener("click", async () => {
 document.getElementById("btn-import-fen").addEventListener("click", () => {
   board.importFromFen(document.getElementById("textbox-fen").value);
   document.getElementById("textbox-b64pos").value = board.toBase64String();
-  board.drawBoard(boardEl, ChessSprites, document.getElementById("rotate-board").checked);
+  board.drawBoard(boardEl, boardRotated);
   board.fillGameStates();
 });
 
@@ -328,7 +324,7 @@ document.getElementById("b64pos-copy-btn").addEventListener("click", async () =>
 document.getElementById("btn-import-b64pos").addEventListener("click", () => {
   board.importFromBase64(document.getElementById("textbox-b64pos").value);
   document.getElementById("textbox-fen").value = board.getFENString();
-  board.drawBoard(boardEl, ChessSprites, document.getElementById("rotate-board").checked);
+  board.drawBoard(boardEl, boardRotated);
   board.fillGameStates();
 });
 

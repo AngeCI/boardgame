@@ -188,6 +188,15 @@ tr:nth-child(odd) > td.chess-lastmove-dst:nth-child(even) {
 tr:nth-child(even) > td.chess-lastmove-dst:nth-child(odd) {
   background-color: var(--chess-lastmove-dst-dark);
 }
+table.chess-container svg {
+  pointer-events: none;
+}
+.chess-container .mode-1 td, .chess-container .mode-2 td {
+  cursor: pointer;
+}
+.chess-container .mode-1 td:hover {
+  background-color: rgba(0, 255, 0, 0.1);
+}
 .cchess-container {
   border-collapse: collapse;
   width: 75vmin;
