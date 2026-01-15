@@ -29,6 +29,9 @@
   --chess-lastmove-dst-light: #e5dd88;
   --chess-lastmove-dst-dark: #d2bc66;
 }
+input, button {
+  font-size: 1rem;
+}
 table.go-board, table.go-board-coord {
   padding: 0;
   border-spacing: 0;

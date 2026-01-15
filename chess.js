@@ -139,7 +139,7 @@ let Board = class {
     };
 
     this.isWhiteToMove = !(moveSide == "b");
-    this.plyCount = parseInt(plyCount);
+    this.plyCount = parseInt(plyCount) - 1;
 
     this.redrawCanvas();
     this.refreshPieceList();
@@ -202,7 +202,7 @@ let Board = class {
         output += "/";
     };
 
-    return output;
+    return `${output} ${this.isWhiteToMove} - - 0 ${this.plyCount + 1}`;
   };
   toBase64String() {
     let arr = new Uint8Array(32);
@@ -409,4 +409,18 @@ let Move = class {
 
 let bitboardToString = function (bitboard) {
   return bitboard.toString(2).padStart(64, "0").match(/.{8}/g).join("\n");
+};
+
+const BitboardHelperObj = await WebAssembly.instantiateStreaming(fetch("data:application/wasm;base64,"));
+const BitboardHelper = {
+  "genPawnMoves": BitboardHelperObj.instance.exports.a,
+  "genKnightMoves": BitboardHelperObj.instance.exports.b,
+  "genKingMoves": BitboardHelperObj.instance.exports.c,
+  "genSliderMoves": BitboardHelperObj.instance.exports.d,
+  "setSquare": BitboardHelperObj.instance.exports.e,
+  "clearSquare": BitboardHelperObj.instance.exports.f,
+  "toggleSquare": BitboardHelperObj.instance.exports.h,
+  "squareIsSet": BitboardHelperObj.instance.exports.i,
+  "clearAndGetIndexOfLSB": BitboardHelperObj.instance.exports.j,
+  "getNumberOfSetBits": BitboardHelperObj.instance.exports.k
 };

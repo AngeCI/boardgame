@@ -67,6 +67,7 @@ body {
     <hr />
     <div id="edit-mode-piece-select" style="display: none;">
       <img src="img/Chess_Pieces_Sprite.svg" style="max-width: 100%" />
+      <br />
       <button id="restore-startpos">Restore to start position</button>
       <hr />
     </div>
@@ -125,24 +126,44 @@ body {
     <div>
       <label for="textbox-b64moves">Base64 move notation:</label>
       <input type="text" id="textbox-b64moves" />
+      <div class="popup" style="display: inline;">
+        <button id="b64moves-copy-btn">Copy base64 moves</button>
+        <span class="popuptext-below" id="b64moves-copy-popup">String copied</span>
+      </div>
       <button id="btn-import-b64moves">Parse base64 moves</button>
+    </div>
+    <div>
+      <label for="textbox-ucimoves">UCI move notation:</label>
+      <input type="text" id="textbox-ucimoves" disabled />
+      <div class="popup" style="display: inline;">
+        <button id="ucimoves-copy-btn">Copy UCI moves</button>
+        <span class="popuptext-below" id="ucimoves-copy-popup">String copied</span>
+      </div>
     </div>
     <hr />
     <p>Game state:</p>
     <div>
       <span id="side-to-move">Side to move:</span>
       <input type="radio" id="black-to-move" name="side-to-move" disabled />
-      <label for="btn-matchmode">Black</label>
+      <label for="black-to-move">Black</label>
       <input type="radio" id="white-to-move" name="side-to-move" disabled />
-      <label for="btn-matchmode">White</label>
+      <label for="white-to-move">White</label>
     </div>
     <div>
-      <label for="castling-right-white">White castling right:</label>
-      <input type="checkbox" id="castling-right-white" disabled />
+      White castling right:
+      <br />
+      <label for="castling-right-white-short">Short (O-O)</label>
+      <input type="checkbox" id="castling-right-white-short" disabled />
+      <label for="castling-right-white-long">Long (O-O-O)</label>
+      <input type="checkbox" id="castling-right-white-long" disabled />
     </div>
     <div>
-      <label for="castling-right-black">Black castling right:</label>
-      <input type="checkbox" id="castling-right-black" disabled />
+      Black castling right:
+      <br />
+      <label for="castling-right-black-short">Short (O-O)</label>
+      <input type="checkbox" id="castling-right-black-short" disabled />
+      <label for="castling-right-wblack-long">Long (O-O-O)</label>
+      <input type="checkbox" id="castling-right-black-long" disabled />
     </div>
     <div>
       <label for="ep-target">En passant target square:</label>
@@ -173,19 +194,100 @@ let sleep = async function (ms) {
 
 let boardEl = document.querySelector("table.chess-container tbody");
 let board = new Board();
+let currentPickedPiece = 14;
 
-let fillGameStates = function (board) {
-  // const sideToMove, whiteCastle, blackCastle, epTargetSq, plyCount;
-  const sideToMove = board.isWhiteToMove, plyCount = board.plyCount;
-  if (sideToMove) {
+board.fillGameStates = function () {
+  if (this.isWhiteToMove) {
     document.getElementById("white-to-move").checked = true;
     document.getElementById("black-to-move").checked = false;
   } else {
     document.getElementById("white-to-move").checked = false;
     document.getElementById("black-to-move").checked = true;
   };
-  document.getElementById("step-count").value = plyCount;
+  document.getElementById("step-count").value = this.plyCount;
 };
+
+const boardEdit = function (ev) {
+  const grid = ev.target;
+  // Put/erase the piece onto the board object
+  board.setPiece(currentPickedPiece, grid);
+  // Recalculate the textual boards
+  document.getElementById("textbox-fen").value = board.getFENString();
+  document.getElementById("textbox-b64pos").value = board.toBase64String();
+};
+
+const boardMatch = function (ev) {};
+
+const resetBoardListeners = function (mode) {
+  switch (mode) {
+    case 0: // view mode
+      for (const tr of boardEl.children) {
+        for (const td of tr.children) {
+          td.removeEventListener("click", boardEdit);
+          td.removeEventListener("click", boardMatch);
+        };
+      };
+      break;
+    case 1: // edit mode
+      for (const tr of boardEl.children) {
+        for (const td of tr.children) {
+          td.removeEventListener("click", boardMatch);
+          td.addEventListener("click", boardEdit);
+        };
+      };
+      break;
+    case 2: // match mode
+      for (const tr of boardEl.children) {
+        for (const td of tr.children) {
+          td.removeEventListener("click", boardEdit);
+          td.addEventListener("click", boardMatch);
+        };
+      };
+      break;
+    default:
+      throw new TypeError();
+      break;
+  }
+};
+
+document.getElementById("btn-viewmode").addEventListener("input", () => {
+  document.getElementById("edit-mode-piece-select").style.display = "none";
+  document.getElementById("black-to-move").disabled = true;
+  document.getElementById("white-to-move").disabled = true;
+  document.getElementById("castling-right-white-short").disabled = true;
+  document.getElementById("castling-right-white-long").disabled = true;
+  document.getElementById("castling-right-black-short").disabled = true;
+  document.getElementById("castling-right-black-long").disabled = true;
+  document.getElementById("ep-target").disabled = true;
+
+  resetBoardListeners(0);
+});
+
+document.getElementById("btn-editmode").addEventListener("input", () => {
+  document.getElementById("edit-mode-piece-select").style.display = "block";
+  document.getElementById("black-to-move").disabled = false;
+  document.getElementById("white-to-move").disabled = false;
+  document.getElementById("castling-right-white-short").disabled = false;
+  document.getElementById("castling-right-white-long").disabled = false;
+  document.getElementById("castling-right-black-short").disabled = false;
+  document.getElementById("castling-right-black-long").disabled = false;
+  document.getElementById("ep-target").disabled = false;
+
+  resetBoardListeners(1);
+});
+
+document.getElementById("btn-matchmode").addEventListener("input", () => {
+  document.getElementById("edit-mode-piece-select").style.display = "none";
+  document.getElementById("black-to-move").disabled = true;
+  document.getElementById("white-to-move").disabled = true;
+  document.getElementById("castling-right-white-short").disabled = true;
+  document.getElementById("castling-right-white-long").disabled = true;
+  document.getElementById("castling-right-black-short").disabled = true;
+  document.getElementById("castling-right-black-long").disabled = true;
+  document.getElementById("ep-target").disabled = true;
+
+  resetBoardListeners(2);
+});
 
 document.getElementById("image-capture-btn").addEventListener("click", async () => {
   let blob = await board.getImage();
@@ -212,7 +314,7 @@ document.getElementById("btn-import-fen").addEventListener("click", () => {
   board.importFromFen(document.getElementById("textbox-fen").value);
   document.getElementById("textbox-b64pos").value = board.toBase64String();
   board.drawBoard(boardEl, ChessSprites, document.getElementById("rotate-board").checked);
-  fillGameStates(board);
+  board.fillGameStates();
 });
 
 document.getElementById("b64pos-copy-btn").addEventListener("click", async () => {
@@ -227,7 +329,7 @@ document.getElementById("btn-import-b64pos").addEventListener("click", () => {
   board.importFromBase64(document.getElementById("textbox-b64pos").value);
   document.getElementById("textbox-fen").value = board.getFENString();
   board.drawBoard(boardEl, ChessSprites, document.getElementById("rotate-board").checked);
-  fillGameStates(board);
+  board.fillGameStates();
 });
 
 document.getElementById("textboard-copy-btn").addEventListener("click", async () => {
@@ -240,6 +342,22 @@ document.getElementById("textboard-copy-btn").addEventListener("click", async ()
 
 document.getElementById("btn-import-b64moves").addEventListener("click", () => {
   board.parseBase64Moves(document.getElementById("textbox-b64moves").value);
+});
+
+document.getElementById("b64moves-copy-btn").addEventListener("click", async () => {
+  await navigator.clipboard.writeText(board.toString());
+  document.getElementById("b64moves-copy-popup").classList.toggle("show");
+  setTimeout(() => {
+    document.getElementById("b64moves-copy-popup").classList.toggle("show");
+  }, 5000);
+});
+
+document.getElementById("ucimoves-copy-btn").addEventListener("click", async () => {
+  await navigator.clipboard.writeText(board.toString());
+  document.getElementById("ucimoves-copy-popup").classList.toggle("show");
+  setTimeout(() => {
+    document.getElementById("ucimoves-copy-popup").classList.toggle("show");
+  }, 5000);
 });
 
 const params = new URL(location.href).searchParams;
