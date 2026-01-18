@@ -33,16 +33,38 @@ body {
 <body>
 <div id="grid">
   <div></div>
-  <table class="chess-container">
-    <tr><td data-index="0"></td><td data-index="1"></td><td data-index="2"></td><td data-index="3"></td><td data-index="4"></td><td data-index="5"></td><td data-index="6"></td><td data-index="7"></td></tr>
-    <tr><td data-index="8"></td><td data-index="9"></td><td data-index="10"></td><td data-index="11"></td><td data-index="12"></td><td data-index="13"></td><td data-index="14"></td><td data-index="15"></td></tr>
-    <tr><td data-index="16"></td><td data-index="17"></td><td data-index="18"></td><td data-index="19"></td><td data-index="20"></td><td data-index="21"></td><td data-index="22"></td><td data-index="23"></td></tr>
-    <tr><td data-index="24"></td><td data-index="25"></td><td data-index="26"></td><td data-index="27"></td><td data-index="28"></td><td data-index="29"></td><td data-index="30"></td><td data-index="31"></td></tr>
-    <tr><td data-index="32"></td><td data-index="33"></td><td data-index="34"></td><td data-index="35"></td><td data-index="36"></td><td data-index="37"></td><td data-index="38"></td><td data-index="39"></td></tr>
-    <tr><td data-index="40"></td><td data-index="41"></td><td data-index="42"></td><td data-index="43"></td><td data-index="44"></td><td data-index="45"></td><td data-index="46"></td><td data-index="47"></td></tr>
-    <tr><td data-index="48"></td><td data-index="49"></td><td data-index="50"></td><td data-index="51"></td><td data-index="52"></td><td data-index="53"></td><td data-index="54"></td><td data-index="55"></td></tr>
-    <tr><td data-index="56"></td><td data-index="57"></td><td data-index="58"></td><td data-index="59"></td><td data-index="60"></td><td data-index="61"></td><td data-index="62"></td><td data-index="63d"></td></tr>
-  </table>
+  <div style="position: relative; max-height: 100vh;">
+    <table class="chess-container">
+      <tr><td data-index="0"></td><td data-index="1"></td><td data-index="2"></td><td data-index="3"></td><td data-index="4"></td><td data-index="5"></td><td data-index="6"></td><td data-index="7"></td></tr>
+      <tr><td data-index="8"></td><td data-index="9"></td><td data-index="10"></td><td data-index="11"></td><td data-index="12"></td><td data-index="13"></td><td data-index="14"></td><td data-index="15"></td></tr>
+      <tr><td data-index="16"></td><td data-index="17"></td><td data-index="18"></td><td data-index="19"></td><td data-index="20"></td><td data-index="21"></td><td data-index="22"></td><td data-index="23"></td></tr>
+      <tr><td data-index="24"></td><td data-index="25"></td><td data-index="26"></td><td data-index="27"></td><td data-index="28"></td><td data-index="29"></td><td data-index="30"></td><td data-index="31"></td></tr>
+      <tr><td data-index="32"></td><td data-index="33"></td><td data-index="34"></td><td data-index="35"></td><td data-index="36"></td><td data-index="37"></td><td data-index="38"></td><td data-index="39"></td></tr>
+      <tr><td data-index="40"></td><td data-index="41"></td><td data-index="42"></td><td data-index="43"></td><td data-index="44"></td><td data-index="45"></td><td data-index="46"></td><td data-index="47"></td></tr>
+      <tr><td data-index="48"></td><td data-index="49"></td><td data-index="50"></td><td data-index="51"></td><td data-index="52"></td><td data-index="53"></td><td data-index="54"></td><td data-index="55"></td></tr>
+      <tr><td data-index="56"></td><td data-index="57"></td><td data-index="58"></td><td data-index="59"></td><td data-index="60"></td><td data-index="61"></td><td data-index="62"></td><td data-index="63"></td></tr>
+    </table>
+    <div class="coords ranks">
+      <span>1</span>
+      <span>2</span>
+      <span>3</span>
+      <span>4</span>
+      <span>5</span>
+      <span>6</span>
+      <span>7</span>
+      <span>8</span>
+    </div>
+    <div class="coords files">
+      <span>a</span>
+      <span>b</span>
+      <span>c</span>
+      <span>d</span>
+      <span>e</span>
+      <span>f</span>
+      <span>g</span>
+      <span>h</span>
+    </div>
+  </div>
   <div>
     <div>
       <label for="load-record">Load chess record file:</label>
@@ -66,9 +88,13 @@ body {
       <label for="btn-matchmode">Match</label>
     <hr />
     <div id="edit-mode-piece-select" style="display: none;">
-      <img src="img/Chess_Pieces_Sprite.svg" style="max-width: 100%" />
+      <div id="piece-selector">
+        <img src="img/Chess_Pieces_Sprite.svg" style="max-width: 100%;" />
+        <button id="erase-piece" style="background-color: transparent; border: 0; padding: 0; font-size: 2.5em;">🗑️<!-- 🪌 --></button>
+      </div>
       <br />
       <button id="restore-startpos">Restore to start position</button>
+      <button id="empty-board">Empty the board</button>
       <hr />
     </div>
     <button id="btn-previous">←</button>
@@ -82,6 +108,23 @@ body {
     </div>
     <hr />
     <p>Display settings:</p>
+    <div>
+      <p>Board colour scheme:</p>
+      <div class="color-scheme-preset" data-light="#a97a65" data-dark="#f1d9c0">
+        <span class="color-box" style="background-color: #f1d9c0;">　</span><span class="color-box" style="background-color: #a97a65;">　</span>
+      </div>
+      <div class="color-scheme-preset" data-light="#eceed1" data-dark="#769b44">
+        <span class="color-box" style="background-color: #eceed1;">　</span><span class="color-box" style="background-color: #769b44;">　</span>
+      </div>
+      <div class="color-scheme-preset" data-light="#dfe2e7" data-dark="#8ca0af">
+        <span class="color-box" style="background-color: #dfe2e7;">　</span><span class="color-box" style="background-color: #8ca0af;">　</span>
+      </div>
+      <div class="color-scheme-preset" data-light="#484073" data-dark="#170a2f">
+        <span class="color-box" style="background-color: #484073;">　</span><span class="color-box" style="background-color: #170a2f;">　</span>
+      </div>
+      <input type="color" id="color-picker-light" class="color-picker" value="#f1d9c0" />
+      <input type="color" id="color-picker-dark" class="color-picker" value="#a97a65" />
+    </div>
     <div>
       <input type="checkbox" id="rotate-board" />
       <label for="rotate-board">Rotate board (view from black’s perspective)</label>
@@ -211,7 +254,7 @@ board.fillGameStates = function () {
 
 const boardEdit = function (ev) {
   const grid = ev.target;
-  const {index} = ev.target.dataset;
+  const { index } = ev.target.dataset;
 
   // Put/erase the piece onto the board object
   if (boardRotated) {
@@ -242,46 +285,50 @@ boardEl.addEventListener("click", (ev) => {
 
 const setMode = function (mode) {
   currentMode = mode;
-  boardEl.classList.add(`mode-${mode}`);
+  boardEl.className = `mode-${mode}`;
+};
+
+const toggleEditModeButtons = function (enabled) {
+  const disabled = !enabled;
+
+  document.getElementById("edit-mode-piece-select").style.display = enabled ? "block" : "none";
+  document.getElementById("black-to-move").disabled = disabled;
+  document.getElementById("white-to-move").disabled = disabled;
+  document.getElementById("castling-right-white-short").disabled = disabled;
+  document.getElementById("castling-right-white-long").disabled = disabled;
+  document.getElementById("castling-right-black-short").disabled = disabled;
+  document.getElementById("castling-right-black-long").disabled = disabled;
+  document.getElementById("ep-target").disabled = disabled;
 };
 
 document.getElementById("btn-viewmode").addEventListener("input", () => {
-  document.getElementById("edit-mode-piece-select").style.display = "none";
-  document.getElementById("black-to-move").disabled = true;
-  document.getElementById("white-to-move").disabled = true;
-  document.getElementById("castling-right-white-short").disabled = true;
-  document.getElementById("castling-right-white-long").disabled = true;
-  document.getElementById("castling-right-black-short").disabled = true;
-  document.getElementById("castling-right-black-long").disabled = true;
-  document.getElementById("ep-target").disabled = true;
-
+  toggleEditModeButtons(false);
   setMode(0);
 });
 
 document.getElementById("btn-editmode").addEventListener("input", () => {
-  document.getElementById("edit-mode-piece-select").style.display = "block";
-  document.getElementById("black-to-move").disabled = false;
-  document.getElementById("white-to-move").disabled = false;
-  document.getElementById("castling-right-white-short").disabled = false;
-  document.getElementById("castling-right-white-long").disabled = false;
-  document.getElementById("castling-right-black-short").disabled = false;
-  document.getElementById("castling-right-black-long").disabled = false;
-  document.getElementById("ep-target").disabled = false;
-
+  toggleEditModeButtons(true);
   setMode(1);
 });
 
 document.getElementById("btn-matchmode").addEventListener("input", () => {
-  document.getElementById("edit-mode-piece-select").style.display = "none";
-  document.getElementById("black-to-move").disabled = true;
-  document.getElementById("white-to-move").disabled = true;
-  document.getElementById("castling-right-white-short").disabled = true;
-  document.getElementById("castling-right-white-long").disabled = true;
-  document.getElementById("castling-right-black-short").disabled = true;
-  document.getElementById("castling-right-black-long").disabled = true;
-  document.getElementById("ep-target").disabled = true;
-
+  toggleEditModeButtons(false);
   setMode(2);
+});
+
+document.getElementById("erase-piece").addEventListener("click", (ev) => {
+  currentPickedPiece = 0;
+  ev.target.style.border = "3px solid red";
+});
+
+document.getElementById("restore-startpos").addEventListener("click", () => {
+  document.getElementById("textbox-b64pos").value = "vNqdy+7u7u4AAAAAAAAAAAAAAAAAAAAAZmZmZjRSFUM";
+  document.getElementById("btn-import-b64pos").click();
+});
+
+document.getElementById("empty-board").addEventListener("click", () => {
+  document.getElementById("textbox-b64pos").value = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+  document.getElementById("btn-import-b64pos").click();
 });
 
 document.getElementById("image-capture-btn").addEventListener("click", async () => {
@@ -291,6 +338,21 @@ document.getElementById("image-capture-btn").addEventListener("click", async () 
   setTimeout(() => {
     document.getElementById("image-capture-popup").classList.toggle("show");
   }, 5000);
+});
+
+document.querySelectorAll(".color-scheme-preset").forEach((e) => {
+  e.addEventListener("click", (ev) => {
+    const { light, dark } = ev.target.closest(".color-scheme-preset").dataset;
+    boardEl.parentElement.style.cssText = `--chess-board-light: ${light}; --chess-board-dark: ${dark};`;
+  });
+});
+
+document.getElementById("color-picker-light").addEventListener("input", (ev) => {
+  boardEl.parentElement.style.cssText = `--chess-board-light: ${ev.target.value};`;
+});
+
+document.getElementById("color-picker-dark").addEventListener("input", (ev) => {
+  boardEl.parentElement.style.cssText = `--chess-board-dark: ${ev.target.value};`;
 });
 
 document.getElementById("rotate-board").addEventListener("input", (ev) => {
@@ -354,6 +416,16 @@ document.getElementById("ucimoves-copy-btn").addEventListener("click", async () 
   setTimeout(() => {
     document.getElementById("ucimoves-copy-popup").classList.toggle("show");
   }, 5000);
+});
+
+document.getElementById("black-to-move").addEventListener("input", () => {
+  if (currentMode)
+    board.isWhiteToMove = false;
+});
+
+document.getElementById("white-to-move").addEventListener("input", () => {
+  if (currentMode)
+    board.isWhiteToMove = true;
 });
 
 const params = new URL(location.href).searchParams;

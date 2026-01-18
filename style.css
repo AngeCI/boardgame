@@ -32,6 +32,33 @@
 input, button {
   font-size: 1rem;
 }
+button {
+  cursor: pointer;
+}
+.color-scheme-preset {
+  display: inline-block;
+  padding: 0 0.25rem;
+  cursor: pointer;
+}
+.color-scheme-preset > span:first-child {
+  margin-right: 0;
+}
+.color-scheme-preset > span:last-child {
+  margin-left: 0;
+}
+.color-box {
+  border: 1px solid darkgray;
+  text-align: center;
+  font-size: 2em;
+}
+.color-picker {
+  background-color: transparent;
+  width: 2em;
+  height: 2em;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
 table.go-board, table.go-board-coord {
   padding: 0;
   border-spacing: 0;
@@ -209,6 +236,55 @@ table.chess-container svg {
   height: 10%;
   padding: 0;
   text-align: center;
+}
+@media (min-width: 320px) {
+  .coords {
+    font-size: calc(8px + 4 * (100vw - 320px) / 880);
+  }
+}
+@media (min-width: 1200px) {
+  .coords {
+    font-size: 12px;
+  }
+}
+.coords {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  pointer-events: none;
+  position: absolute;
+  display: flex;
+  font-weight: bold;
+}
+.coords.ranks {
+  flex-flow: column-reverse;
+  top: 1px;
+  right: 0;
+  width: .8em;
+  height: 100%;
+}
+.coords.files {
+  flex-flow: row;
+  bottom: 0;
+  left: 0;
+  text-align: left;
+  width: 100%;
+  height: 1.4em;
+}
+.coords > span {
+  flex: 1 1 auto;
+}
+.ranks:nth-child(odd) {
+  color: #fff;
+}
+.ranks:nth-child(even) {
+  color: #fff;
+}
+.files:nth-child(odd) {
+  color: #fff;
+}
+.files:nth-child(even) {
+  color: #fff;
 }
 .popup {
   position: relative;
