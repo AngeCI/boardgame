@@ -52,6 +52,10 @@ let Board = class {
   #FILE_LEFT = 3;
   #FILE_RIGHT = 11;
 
+  isRedToMove;
+  plyCount;
+  moves;
+
   constructor() {
     this.#ctx = this.#cnv.getContext("2d");
   };
@@ -72,6 +76,11 @@ let Board = class {
       };
     };
   };
+  /*
+  refreshPieceList() {
+    // Todo
+  };
+  */
   convert90to256(num) {
     const row = num * 7282 >>> 16; // Math.floor(num / 9)
     const column = (num * 7282 & 0xffff) * 9 >>> 16; // num % 9
@@ -92,17 +101,17 @@ let Board = class {
       "p": Piece.PAWN
     };
 
-    const board = fen.split(" ")[0];
+    const [board, moveSide, , , , plyCount] = fen.split(" ");
     let file = 0, rank = 0;
     for (let symbol of board) {
-      if (symbol == "/") {
+      if (symbol === "/") {
         file = 0;
         rank++;
       } else {
         if (!isNaN(parseInt(symbol))) {
           file += parseInt(symbol);
         } else {
-          let pieceColour = symbol.charCodeAt(0) < 96 ? Piece.WHITE : Piece.BLACK;
+          let pieceColour = symbol.charCodeAt(0) < 96 ? Piece.RED : Piece.BLACK;
           let pieceType = pieceTypeTable[symbol.toLowerCase()];
           this.#squares[this.convert90to256(rank * 9 + file)] = pieceType | pieceColour;
           file++;
@@ -110,7 +119,11 @@ let Board = class {
       };
     };
 
+    this.isRedToMove = !(moveSide == "b");
+    this.plyCount = (parseInt(plyCount) - 1 << 1) + !this.isRedToMove;
+
     this.redrawCanvas();
+    // this.refreshPieceList();
   };
   importFromBase64(str) {
     const binArray = atob(str);
@@ -124,6 +137,7 @@ let Board = class {
     };
 
     this.redrawCanvas();
+    // this.refreshPieceList();
   };
   toString() {
     const pieceTable = " 1234567.KABNRCP.kabnrcp";
@@ -169,7 +183,7 @@ let Board = class {
         output += "/";
     };
 
-    return output;
+    return `${output} ${this.isRedToMove ? "w" : "b"} - - 0 ${(this.plyCount >> 1) + 1}`;
   };
   toBase64String() {
     let arr = new Uint8Array(45);
@@ -184,7 +198,55 @@ let Board = class {
     };
     return btoa(String.fromCharCode.apply(null, arr));
   };
-  drawBoard(boardEl, sprites = CChessSprites) {
+  getPiece(square) {
+    return this.#squares[square];
+  };
+  /*
+  getPieceList(pieceType, color) {
+    color = (color >> 3) - 1;
+    switch (pieceType) {
+      case Piece.KING:
+        return color ? this.#blackKings : this.#redKings;
+        break;
+      case Piece.ADVISOR:
+        return color ? this.#blackAdvisors : this.#redAdvisors;
+        break;
+      case Piece.BISHOP:
+        return color ? this.#blackBishops : this.#redBishops;
+        break;
+      case Piece.KNIGHT:
+        return color ? this.#blackKnights : this.#redKnights;
+        break;
+      case Piece.ROOK:
+        return color ? this.#blackRooks : this.#redRooks;
+        break;
+      case Piece.CANNON:
+        return color ? this.#blackCannons : this.#redCannons;
+        break;
+      case Piece.PAWN:
+        return color ? this.#blackPawns : this.#redPawns;
+        break;
+      default:
+        throw new TypeError();
+        break;
+    };
+  };
+  getAllPieceLists() {
+    return {
+      "king": [this.#redKings, this.#blackKings],
+      "advisor": [this.#redAdvisors, this.#blackAdvisors],
+      "bishop": [this.#redBishops, this.#blackBishops],
+      "knight": [this.#redKnights, this.#blackKnights],
+      "rook": [this.#redRooks, this.#blackRooks],
+      "cannon": [this.#redCannons, this.#blackCannons],
+      "pawn": [this.#redPawns, this.#blackPawns]
+    };
+  };
+  getPieceBitboard(type, isRed) {
+    // Todo
+  };
+  */
+  drawBoard(boardEl, rotated = false, sprites = CChessSprites) {
     const labels = [" ", "rK", "rA", "rB", "rN", "rR", "rC", "rP", " ", "bK", "bA", "bB", "bN", "bR", "bC", "bP"];
     const boardRows = boardEl.children;
     let boardGrids, pieceNum;
@@ -193,7 +255,7 @@ let Board = class {
       boardGrids = boardRows[i].children;
       for (let j = 0; j < 9; j++) {
         boardGrids[j].innerHTML = "";
-        pieceNum = this.#squares[this.convert90to256(i * 9 + j)] - 8;
+        pieceNum = this.#squares[rotated ? this.convert90to256(89 - i * 9 - j) : this.convert90to256(i * 9 + j)] - 8;
         let sprite = sprites[labels[pieceNum]];
         if (sprite) {
           boardGrids[j].appendChild(sprite.cloneNode(true));
@@ -201,7 +263,7 @@ let Board = class {
       };
     };
   };
-  drawTextualBoard(boardEl) {
+  drawTextualBoard(boardEl, rotated = false) {
     const labels = " KABNRCP";
     const boardRows = boardEl.children;
     let boardGrids, pieceNum, pieceType, pieceColor;
@@ -209,7 +271,7 @@ let Board = class {
     for (let i = 0; i < 10; i++) {
       boardGrids = boardRows[i].children;
       for (let j = 0; j < 9; j++) {
-        pieceNum = this.#squares[this.convert90to256(i * 9 + j)];
+        pieceNum = this.#squares[rotated ? this.convert90to256(89 - i * 9 - j) : this.convert90to256(i * 9 + j)];
         pieceType = pieceNum & 7;
         pieceColor = ((pieceNum >> 3) & 3) - 1;
         boardGrids[j].innerText = labels[pieceType];
@@ -226,6 +288,17 @@ let Board = class {
   getImage() {
      return this.#cnv.convertToBlob();
   };
+  /*
+  makeMove(move) {
+    // Todo
+  };
+  undoMove(move) {
+    // Todo
+  };
+  */
+  setPiece(index, newPiece) {
+    this.#squares[this.convert90to256(index)] = newPiece;
+  };
 };
 
 let Piece = {
@@ -238,7 +311,7 @@ let Piece = {
   "CANNON": 6,
   "PAWN": 7,
 
-  "WHITE": 8,
+  "RED": 8,
   "BLACK": 16,
 
   "isColour": function (piece) {

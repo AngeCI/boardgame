@@ -35,16 +35,16 @@ body {
   <div></div>
   <div style="position: relative;">
     <table class="cchess-container" style="position: absolute;">
-      <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-      <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-      <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-      <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-      <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-      <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-      <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-      <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-      <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-      <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      <tr><td data-index="0"></td><td data-index="1"></td><td data-index="2"></td><td data-index="3"></td><td data-index="4"></td><td data-index="5"></td><td data-index="6"></td><td data-index="7"></td><td data-index="8"></td></tr>
+      <tr><td data-index="9"></td><td data-index="10"></td><td data-index="11"></td><td data-index="12"></td><td data-index="13"></td><td data-index="14"></td><td data-index="15"></td><td data-index="16"></td><td data-index="17"></td></tr>
+      <tr><td data-index="18"></td><td data-index="19"></td><td data-index="20"></td><td data-index="21"></td><td data-index="22"></td><td data-index="23"></td><td data-index="24"></td><td data-index="25"></td><td data-index="26"></td></tr>
+      <tr><td data-index="27"></td><td data-index="28"></td><td data-index="29"></td><td data-index="30"></td><td data-index="31"></td><td data-index="32"></td><td data-index="33"></td><td data-index="34"></td><td data-index="35"></td></tr>
+      <tr><td data-index="36"></td><td data-index="37"></td><td data-index="38"></td><td data-index="39"></td><td data-index="40"></td><td data-index="41"></td><td data-index="42"></td><td data-index="43"></td><td data-index="44"></td></tr>
+      <tr><td data-index="45"></td><td data-index="46"></td><td data-index="47"></td><td data-index="48"></td><td data-index="49"></td><td data-index="50"></td><td data-index="51"></td><td data-index="52"></td><td data-index="53"></td></tr>
+      <tr><td data-index="54"></td><td data-index="55"></td><td data-index="56"></td><td data-index="57"></td><td data-index="58"></td><td data-index="59"></td><td data-index="60"></td><td data-index="61"></td><td data-index="62"></td></tr>
+      <tr><td data-index="63"></td><td data-index="64"></td><td data-index="65"></td><td data-index="66"></td><td data-index="67"></td><td data-index="68"></td><td data-index="69"></td><td data-index="70"></td><td data-index="71"></td></tr>
+      <tr><td data-index="72"></td><td data-index="73"></td><td data-index="74"></td><td data-index="75"></td><td data-index="76"></td><td data-index="77"></td><td data-index="78"></td><td data-index="79"></td><td data-index="80"></td></tr>
+      <tr><td data-index="81"></td><td data-index="82"></td><td data-index="83"></td><td data-index="84"></td><td data-index="85"></td><td data-index="86"></td><td data-index="87"></td><td data-index="88"></td><td data-index="89"></td></tr>
     </table>
     <img src="img/cchess_board.svg" style="max-height: 100vmin;" />
   </div>
@@ -71,9 +71,14 @@ body {
       <label for="btn-matchmode">Match</label>
     <hr />
     <div id="edit-mode-piece-select" style="display: none;">
-      <img src="img/cchess_pieces_sprite.svg" style="max-width: 100%" />
+      <div id="piece-selector">
+        <img src="img/cchess_pieces_sprite.svg" style="max-width: 100%" />
+        <br />
+        <button id="erase-piece" style="background-color: transparent; border: 0; padding: 0; font-size: 2.5em;">🗑️<!-- 🪌 --></button>
+      </div>
       <br />
       <button id="restore-startpos">Restore to start position</button>
+      <button id="empty-board">Empty the board</button>
       <hr />
     </div>
     <button id="btn-previous">←</button>
@@ -146,7 +151,6 @@ body {
       </div>
     </div>
     <hr />
-    <p>Game state:</p>
     <div>
       <span id="side-to-move">Side to move:</span>
       <input type="radio" id="black-to-move" name="side-to-move" disabled />
@@ -179,10 +183,12 @@ let sleep = async function (ms) {
 
 let boardEl = document.querySelector("table.cchess-container tbody");
 let board = new Board();
+let currentMode = 0; // 0: view, 1: edit, 2: match
 let currentPickedPiece = 15;
+let boardRotated = false;
 
 board.fillGameStates = function () {
-  if (this.isWhiteToMove) {
+  if (this.isRedToMove) {
     document.getElementById("red-to-move").checked = true;
     document.getElementById("black-to-move").checked = false;
   } else {
@@ -194,29 +200,86 @@ board.fillGameStates = function () {
 
 let boardEdit = function (ev) {
   const grid = ev.target;
+  const { index } = ev.target.dataset;
+
   // Put/erase the piece onto the board object
-  board.setPiece(currentPickedPiece, grid);
+  if (boardRotated) {
+    board.setPiece(89 - index, currentPickedPiece);
+  } else {
+    board.setPiece(index, currentPickedPiece);
+  };
+
   // Recalculate the textual boards
   document.getElementById("textbox-fen").value = board.getFENString();
   document.getElementById("textbox-b64pos").value = board.toBase64String();
+  board.drawBoard(boardEl, boardRotated);
+};
+
+const boardMatch = function (ev) {};
+
+boardEl.addEventListener("click", (ev) => {
+  const td = ev.target.closest("td");
+  if (!td || currentMode === 0) return;
+
+  // Route to the correct function based on mode
+  if (currentMode === 1) { // edit mode
+    boardEdit.call(td, ev); // .call(td) preserves the 'this' context if needed
+  } else if (currentMode === 2) { // match mode
+    boardMatch.call(td, ev);
+  };
+});
+
+const setMode = function (mode) {
+  currentMode = mode;
+  boardEl.className = `mode-${mode}`;
+};
+
+const toggleEditModeButtons = function (enabled) {
+  const disabled = !enabled;
+
+  document.getElementById("edit-mode-piece-select").style.display = enabled ? "block" : "none";
+  document.getElementById("black-to-move").disabled = disabled;
+  document.getElementById("red-to-move").disabled = disabled;
 };
 
 document.getElementById("btn-viewmode").addEventListener("input", () => {
-  document.getElementById("edit-mode-piece-select").style.display = "none";
-  document.getElementById("black-to-move").disabled = true;
-  document.getElementById("white-to-move").disabled = true;
+  toggleEditModeButtons(false);
+  setMode(0);
 });
 
 document.getElementById("btn-editmode").addEventListener("input", () => {
-  document.getElementById("edit-mode-piece-select").style.display = "block";
-  document.getElementById("black-to-move").disabled = false;
-  document.getElementById("white-to-move").disabled = false;
+  toggleEditModeButtons(true);
+  setMode(1);
 });
 
 document.getElementById("btn-matchmode").addEventListener("input", () => {
-  document.getElementById("edit-mode-piece-select").style.display = "none";
-  document.getElementById("black-to-move").disabled = true;
-  document.getElementById("white-to-move").disabled = true;
+  toggleEditModeButtons(false);
+  setMode(2);
+});
+
+document.getElementById("erase-piece").addEventListener("click", (ev) => {
+  currentPickedPiece = 0;
+  ev.target.style.border = "3px solid red";
+});
+
+document.getElementById("restore-startpos").addEventListener("click", () => {
+  document.getElementById("textbox-b64pos").value = "3LqavNAAAAAADgAADg8PDw8PAAAAAAAAAAAAcHBwcHBgAABgAAAAAAVDISNF";
+  document.getElementById("btn-import-b64pos").click();
+});
+
+document.getElementById("empty-board").addEventListener("click", () => {
+  document.getElementById("textbox-b64pos").value = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+  document.getElementById("btn-import-b64pos").click();
+});
+
+document.getElementById("step-count").addEventListener("input", (ev) => {
+  if (currentMode === 1) {
+    board.plyCount = ev.target.value;
+
+    // Recalculate the textual boards
+    document.getElementById("textbox-fen").value = board.getFENString();
+    document.getElementById("textbox-b64pos").value = board.toBase64String();
+  };
 });
 
 document.getElementById("image-capture-btn").addEventListener("click", async () => {
@@ -229,7 +292,8 @@ document.getElementById("image-capture-btn").addEventListener("click", async () 
 });
 
 document.getElementById("rotate-board").addEventListener("input", (ev) => {
-  board.drawBoard(boardEl, CChessSprites, ev.target.checked);
+  boardRotated = !boardRotated;
+  board.drawBoard(boardEl, boardRotated);
 });
 
 document.getElementById("fen-copy-btn").addEventListener("click", async () => {
@@ -243,7 +307,7 @@ document.getElementById("fen-copy-btn").addEventListener("click", async () => {
 document.getElementById("btn-import-fen").addEventListener("click", () => {
   board.importFromFen(document.getElementById("textbox-fen").value);
   document.getElementById("textbox-b64pos").value = board.toBase64String();
-  board.drawBoard(boardEl);
+  board.drawBoard(boardEl, boardRotated);
   board.fillGameStates();
 });
 
@@ -258,7 +322,7 @@ document.getElementById("b64pos-copy-btn").addEventListener("click", async () =>
 document.getElementById("btn-import-b64pos").addEventListener("click", () => {
   board.importFromBase64(document.getElementById("textbox-b64pos").value);
   document.getElementById("textbox-fen").value = board.getFENString();
-  board.drawBoard(boardEl);
+  board.drawBoard(boardEl, boardRotated);
   board.fillGameStates();
 });
 
@@ -288,6 +352,28 @@ document.getElementById("ucimoves-copy-btn").addEventListener("click", async () 
   setTimeout(() => {
     document.getElementById("ucimoves-copy-popup").classList.toggle("show");
   }, 5000);
+});
+
+document.getElementById("black-to-move").addEventListener("input", () => {
+  if (currentMode)
+    board.isRedToMove = false;
+
+    if (currentMode === 2) {
+      // Recalculate the textual boards
+      document.getElementById("textbox-fen").value = board.getFENString();
+      document.getElementById("textbox-b64pos").value = board.toBase64String();
+    };
+});
+
+document.getElementById("red-to-move").addEventListener("input", () => {
+  if (currentMode)
+    board.isRedToMove = true;
+
+    if (currentMode === 2) {
+      // Recalculate the textual boards
+      document.getElementById("textbox-fen").value = board.getFENString();
+      document.getElementById("textbox-b64pos").value = board.toBase64String();
+    };
 });
 
 const params = new URL(location.href).searchParams;

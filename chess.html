@@ -44,6 +44,7 @@ body {
       <tr><td data-index="48"></td><td data-index="49"></td><td data-index="50"></td><td data-index="51"></td><td data-index="52"></td><td data-index="53"></td><td data-index="54"></td><td data-index="55"></td></tr>
       <tr><td data-index="56"></td><td data-index="57"></td><td data-index="58"></td><td data-index="59"></td><td data-index="60"></td><td data-index="61"></td><td data-index="62"></td><td data-index="63"></td></tr>
     </table>
+    <img src="data:image/gif;base64,R0lGODlhmwCbAHAAACH5BAEAAAEALAAAAACbAJsAgQAAAAAAAAAAAAAAAAJ9jI+py+0Po5y02ouz3rz7D4biSJbmiabqyrbuC8fyTNf2jef6zvf+DwwKh8Si8YhMKpfMpvMJjUqn1Kr1is1qt9yu9wsOi8fksvmMTqvX7Lb7DY/L5/S6/Y7P6/f8vv8PGCg4SFhoeIiYqLjI2Oj4CBkpOUlZaXmJmam5ydlA6fkJGio6SlpqeoqaqrrK2ur6ChsrO0tba3uLm6u7y9vr+wscLDxMXGx8jJysvMzc7PwMHS09TV1tfY2drb3N3QTt7VkAADs=" id="board-background" style="display: none; max-height: 100vmin;" />
     <div class="coords ranks">
       <span>1</span>
       <span>2</span>
@@ -90,6 +91,7 @@ body {
     <div id="edit-mode-piece-select" style="display: none;">
       <div id="piece-selector">
         <img src="img/Chess_Pieces_Sprite.svg" style="max-width: 100%;" />
+        <br />
         <button id="erase-piece" style="background-color: transparent; border: 0; padding: 0; font-size: 2.5em;">🗑️<!-- 🪌 --></button>
       </div>
       <br />
@@ -110,7 +112,7 @@ body {
     <p>Display settings:</p>
     <div>
       <p>Board colour scheme:</p>
-      <div class="color-scheme-preset" data-light="#a97a65" data-dark="#f1d9c0">
+      <div class="color-scheme-preset" data-light="#f1d9c0" data-dark="#a97a65">
         <span class="color-box" style="background-color: #f1d9c0;">　</span><span class="color-box" style="background-color: #a97a65;">　</span>
       </div>
       <div class="color-scheme-preset" data-light="#eceed1" data-dark="#769b44">
@@ -121,6 +123,9 @@ body {
       </div>
       <div class="color-scheme-preset" data-light="#484073" data-dark="#170a2f">
         <span class="color-box" style="background-color: #484073;">　</span><span class="color-box" style="background-color: #170a2f;">　</span>
+      </div>
+      <div class="color-scheme-preset" data-light="#cccccc" data-dark="#aaaaaa">
+        <span class="color-box" style="background-color: #cccccc;">　</span><span class="color-box" style="background-color: #aaaaaa;">　</span>
       </div>
       <input type="color" id="color-picker-light" class="color-picker" value="#f1d9c0" />
       <input type="color" id="color-picker-dark" class="color-picker" value="#a97a65" />
@@ -331,6 +336,16 @@ document.getElementById("empty-board").addEventListener("click", () => {
   document.getElementById("btn-import-b64pos").click();
 });
 
+document.getElementById("step-count").addEventListener("input", (ev) => {
+  if (currentMode === 1) {
+    board.plyCount = ev.target.value;
+
+    // Recalculate the textual boards
+    document.getElementById("textbox-fen").value = board.getFENString();
+    document.getElementById("textbox-b64pos").value = board.toBase64String();
+  };
+});
+
 document.getElementById("image-capture-btn").addEventListener("click", async () => {
   let blob = await board.getImage();
   await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
@@ -348,11 +363,11 @@ document.querySelectorAll(".color-scheme-preset").forEach((e) => {
 });
 
 document.getElementById("color-picker-light").addEventListener("input", (ev) => {
-  boardEl.parentElement.style.cssText = `--chess-board-light: ${ev.target.value};`;
+  boardEl.parentElement.style.setProperty('--chess-board-light', ev.target.value);
 });
 
 document.getElementById("color-picker-dark").addEventListener("input", (ev) => {
-  boardEl.parentElement.style.cssText = `--chess-board-dark: ${ev.target.value};`;
+  boardEl.parentElement.style.setProperty('--chess-board-dark', ev.target.value);
 });
 
 document.getElementById("rotate-board").addEventListener("input", (ev) => {
@@ -421,11 +436,23 @@ document.getElementById("ucimoves-copy-btn").addEventListener("click", async () 
 document.getElementById("black-to-move").addEventListener("input", () => {
   if (currentMode)
     board.isWhiteToMove = false;
+
+    if (currentMode === 2) {
+      // Recalculate the textual boards
+      document.getElementById("textbox-fen").value = board.getFENString();
+      document.getElementById("textbox-b64pos").value = board.toBase64String();
+    };
 });
 
 document.getElementById("white-to-move").addEventListener("input", () => {
   if (currentMode)
     board.isWhiteToMove = true;
+
+    if (currentMode === 2) {
+      // Recalculate the textual boards
+      document.getElementById("textbox-fen").value = board.getFENString();
+      document.getElementById("textbox-b64pos").value = board.toBase64String();
+    };
 });
 
 const params = new URL(location.href).searchParams;

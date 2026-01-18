@@ -215,27 +215,14 @@ tr:nth-child(odd) > td.chess-lastmove-dst:nth-child(even) {
 tr:nth-child(even) > td.chess-lastmove-dst:nth-child(odd) {
   background-color: var(--chess-lastmove-dst-dark);
 }
-table.chess-container svg {
+table.chess-container svg, table.cchess-container svg {
   pointer-events: none;
 }
-.chess-container .mode-1 td, .chess-container .mode-2 td {
+.chess-container .mode-1 td, .chess-container .mode-2 td, .cchess-container .mode-1 td, .cchess-container .mode-2 td {
   cursor: pointer;
 }
-.chess-container .mode-1 td:hover {
+.chess-container .mode-1 td:hover, .cchess-container .mode-1 td:hover {
   background-color: rgba(0, 255, 0, 0.1);
-}
-.cchess-container {
-  border-collapse: collapse;
-  width: 75vmin;
-  height: 83vmin;
-  margin: 7.5vmin 0;
-}
-.cchess-container td {
-  cursor: default;
-  width: 11.1%;
-  height: 10%;
-  padding: 0;
-  text-align: center;
 }
 @media (min-width: 320px) {
   .coords {
@@ -285,6 +272,19 @@ table.chess-container svg {
 }
 .files:nth-child(even) {
   color: #fff;
+}
+.cchess-container {
+  border-collapse: collapse;
+  width: 75vmin;
+  height: 83vmin;
+  margin: 7.5vmin 0;
+}
+.cchess-container td {
+  cursor: default;
+  width: 11.1%;
+  height: 10%;
+  padding: 0;
+  text-align: center;
 }
 .popup {
   position: relative;

@@ -96,6 +96,7 @@ let Board = class {
     };
   };
   refreshPieceList() {
+    // Todo
     /*
     const pieceListTable = [
       null, null, null, null, null, null, null, null,
@@ -123,7 +124,7 @@ let Board = class {
     const [board, moveSide, , , , plyCount] = fen.split(" ");
     let file = 0, rank = 0;
     for (let symbol of board) {
-      if (symbol == "/") {
+      if (symbol === "/") {
         file = 0;
         rank++;
       } else {
@@ -138,8 +139,8 @@ let Board = class {
       };
     };
 
-    this.isWhiteToMove = !(moveSide == "b");
-    this.plyCount = parseInt(plyCount) - 1;
+    this.isWhiteToMove = !(moveSide === "b");
+    this.plyCount = (parseInt(plyCount) - 1 << 1) + !this.isWhiteToMove;
 
     this.redrawCanvas();
     this.refreshPieceList();
@@ -182,7 +183,7 @@ let Board = class {
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
         let piece = this.#squares[(i << 3) + j];
-        if (piece != 0) {
+        if (piece !== 0) {
           if (emptySquareCounter > 0) {
             output += emptySquareCounter;
             emptySquareCounter = 0;
@@ -193,7 +194,7 @@ let Board = class {
         };
       };
 
-        if (emptySquareCounter != 0) {
+        if (emptySquareCounter !== 0) {
           output += emptySquareCounter;
           emptySquareCounter = 0;
         };
@@ -202,7 +203,7 @@ let Board = class {
         output += "/";
     };
 
-    return `${output} ${this.isWhiteToMove} - - 0 ${this.plyCount + 1}`;
+    return `${output} ${this.isWhiteToMove ? "w" : "b"} - - 0 ${(this.plyCount >> 1) + 1}`;
   };
   toBase64String() {
     let arr = new Uint8Array(32);
@@ -257,7 +258,7 @@ let Board = class {
     };
   };
   getPieceBitboard(type, isWhite) {
-    
+    // Todo
   };
   drawBoard(boardEl, rotated = false, sprites = ChessSprites) {
     const labels = [" ", "wK", "wQ", "wR", "wN", "wB", "wP", " ", " ", "bK", "bQ", "bR", "bN", "bB", "bP", " "];
@@ -302,10 +303,10 @@ let Board = class {
      return this.#cnv.convertToBlob();
   };
   makeMove(move) {
-
+    // Todo
   };
   undoMove(move) {
-
+    // Todo
   };
   setPiece(index, newPiece) {
     this.#squares[index] = newPiece;
@@ -367,7 +368,7 @@ let Move = class {
   };
 
   isNull() {
-    return moveValue == 0;
+    return moveValue === 0;
   };
   getStartSq() {
     return moveValue & START_SQ_MASK;
@@ -379,7 +380,7 @@ let Move = class {
     return moveFlag >= PROMOTE_TO_QUEEN_FLAG;
   };
   isEnPassant() {
-    return moveFlag == EN_PASSANT_FLAG;
+    return moveFlag === EN_PASSANT_FLAG;
   };
   nullMove = new Move(0);
   getPromotionPieceType() {
@@ -397,7 +398,7 @@ let Move = class {
     };
   };
   isSameMove(a, b) {
-    return a.moveValue == b.moveValue;
+    return a.moveValue === b.moveValue;
   };
   toString() {
     const promotionPiece = ".kqrnbp.";
