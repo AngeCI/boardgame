@@ -321,6 +321,28 @@ document.getElementById("btn-matchmode").addEventListener("input", () => {
   setMode(2);
 });
 
+document.querySelector("#piece-selector img").addEventListener("click", (ev) => {
+  const rect = ev.target.getBoundingClientRect();
+  // Calculate the position relative to the image (in pixels)
+  const x = ev.clientX - rect.left;
+  const y = ev.clientY - rect.top;
+  // Calculate the relative coordinates (0.0 to 1.0)
+  const xPercent = x / rect.width;
+  const yPercent = y / rect.height;
+  
+  currentPickedPiece = parseInt(xPercent * 6) + parseInt(yPercent * 2) * 8 + 9;
+  // console.info(currentPickedPiece, xPercent, yPercent);
+
+  // Switch rook and bishop
+  if ((currentPickedPiece & 7) == Piece.ROOK) {
+    currentPickedPiece = (currentPickedPiece & 24) | Piece.BISHOP;
+  } else if ((currentPickedPiece & 7) == Piece.BISHOP) {
+    currentPickedPiece = (currentPickedPiece & 24) | Piece.ROOK;
+  };
+
+  document.getElementById("erase-piece").style.border = "0";
+});
+
 document.getElementById("erase-piece").addEventListener("click", (ev) => {
   currentPickedPiece = 0;
   ev.target.style.border = "3px solid red";
