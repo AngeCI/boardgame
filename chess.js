@@ -342,6 +342,14 @@ let Board = class {
 
     return output.join("");
   };
+  displayMove(move, boardEl, rotated = false) {
+    const convertFunc = (n) => (7 - (n >> 3)) << 3 | (n & 7);
+    const convertedSrc = convertFunc(Move.getStartSq(move));
+    const convertedDst = convertFunc(Move.getTargetSq(move));
+
+    boardEl.querySelector(`[data-index="${rotated ? 63 - convertedSrc : convertedSrc}"]`).classList.add("chess-lastmove-src");
+    boardEl.querySelector(`[data-index="${rotated ? 63 - convertedDst : convertedDst}"]`).classList.add("chess-lastmove-dst");
+  };
   makeMove(move) {
     // Todo
   };

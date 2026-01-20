@@ -256,6 +256,7 @@ board.fillGameStates = function () {
     document.getElementById("black-to-move").checked = true;
   };
   document.getElementById("step-count").value = this.plyCount;
+  document.getElementById("step-total").textContent = this.moves.length - 1;
 };
 
 const boardEdit = function (ev) {
