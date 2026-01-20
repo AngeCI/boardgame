@@ -36,6 +36,22 @@ const ChessSpritesMap = ["wK", "wQ", "wB", "wN", "wR", "wP", "bK", "bQ", "bB", "
     ChessSpritesImageBitmap.bR = await createImageBitmap(spriteImg, 400, 100, 100, 100);
     ChessSpritesImageBitmap.bP = await createImageBitmap(spriteImg, 500, 100, 100, 100);
   };
+
+  /*
+  const BitboardHelperObj = await WebAssembly.instantiateStreaming(fetch("data:application/wasm;base64,"));
+  const BitboardHelper = {
+    "genPawnMoves": BitboardHelperObj.instance.exports.a,
+    "genKnightMoves": BitboardHelperObj.instance.exports.b,
+    "genKingMoves": BitboardHelperObj.instance.exports.c,
+    "genSliderMoves": BitboardHelperObj.instance.exports.d,
+    "setSquare": BitboardHelperObj.instance.exports.e,
+    "clearSquare": BitboardHelperObj.instance.exports.f,
+    "toggleSquare": BitboardHelperObj.instance.exports.h,
+    "squareIsSet": BitboardHelperObj.instance.exports.i,
+    "clearAndGetIndexOfLSB": BitboardHelperObj.instance.exports.j,
+    "getNumberOfSetBits": BitboardHelperObj.instance.exports.k
+  };
+  */
 })();
 
 let Board = class {
@@ -45,7 +61,7 @@ let Board = class {
 
   isWhiteToMove;
   plyCount;
-  moves;
+  moves = [];
 
   // Piece lists
   #pieceLists = [];
@@ -302,6 +318,30 @@ let Board = class {
   getImage() {
      return this.#cnv.convertToBlob();
   };
+  parseUCIMoves(str) {
+    this.moves = Move.fromUCIString(str);
+  };
+  parseBase64Moves(str) {
+    this.moves = Move.fromBase64String(str);
+  };
+  toUCIMoves() {
+    let output = [];
+
+    for (const move of this.moves) {
+      output.push(Move.toUCIString(move));
+    };
+
+    return output.join(" ");
+  };
+  toBase64Moves(str) {
+    let output = [];
+
+    for (const move of this.moves) {
+      output.push(Move.toBase64String(move));
+    };
+
+    return output.join("");
+  };
   makeMove(move) {
     // Todo
   };
@@ -341,21 +381,25 @@ let sqNumberToAlgebraic = function (n) {
   return String.fromCharCode((n & 7) + 97) + ((n >> 3) + 1);
 };
 
+let algebraicToSqNumber = function (str) {
+  return str.charCodeAt(0) - 97 + (str.charCodeAt(1) - 49 << 3);
+};
+
 let Move = class {
   moveValue;
 
-  NO_FLAG = 0;
-  EN_PASSANT_FLAG = 1;
-  CASTLE_FLAG = 2;
-  PAWN_DOUBLE_PUSH_FLAG = 3;
-  PROMOTE_TO_QUEEN_FLAG = 4;
-  PROMOTE_TO_KNIGHT_FLAG = 5;
-  PROMOTE_TO_ROOK_FLAG = 6;
-  PROMOTE_TO_BISHOP_FLAG = 7;
+  static NO_FLAG = 0;
+  static EN_PASSANT_FLAG = 1;
+  static CASTLE_FLAG = 2;
+  static PAWN_DOUBLE_PUSH_FLAG = 3;
+  static PROMOTE_TO_QUEEN_FLAG = 4;
+  static PROMOTE_TO_KNIGHT_FLAG = 5;
+  static PROMOTE_TO_ROOK_FLAG = 6;
+  static PROMOTE_TO_BISHOP_FLAG = 7;
 
-  START_SQ_MASK = 0x0003f;
-  TARGET_SQ_MASK = 0x0fc00;
-  FLAG_MASK = 0xf0000;
+  static START_SQ_MASK = 0x003f;
+  static TARGET_SQ_MASK = 0x0fc0;
+  static FLAG_MASK = 0xf000;
 
   constructor(moveValue, targetSq, flag) {
     if (!targetSq) {
@@ -367,66 +411,140 @@ let Move = class {
     };
   };
 
-  isNull() {
-    return moveValue === 0;
+  static isNull(n) {
+    return n === 0;
   };
-  getStartSq() {
-    return moveValue & START_SQ_MASK;
+  static getStartSq(n) {
+    return n & this.START_SQ_MASK;
   };;
-  getTargetSq() {
-    return (moveValue & TARGET_SQ_MASK) >> 6;
+  static getTargetSq(n) {
+    return (n & this.TARGET_SQ_MASK) >> 6;
   };
-  isPromotion() {
-    return moveFlag >= PROMOTE_TO_QUEEN_FLAG;
+  static isPromotion(n) {
+    return (n & this.FLAG_MASK) >= this.PROMOTE_TO_QUEEN_FLAG;
   };
-  isEnPassant() {
-    return moveFlag === EN_PASSANT_FLAG;
+  static isEnPassant(n) {
+    return (n & this.FLAG_MASK) === this.EN_PASSANT_FLAG;
   };
   nullMove = new Move(0);
-  getPromotionPieceType() {
-    switch(MoveFlag) {
-      case PROMOTE_TO_ROOK_FLAG:
+  static getPromotionPieceType(n) {
+    switch (n & this.FLAG_MASK) {
+      case this.PROMOTE_TO_ROOK_FLAG:
         return Piece.ROOK;
-      case PROMOTE_TO_KNIGHT_FLAG:
+      case this.PROMOTE_TO_KNIGHT_FLAG:
         return Piece.KNIGHT;
-      case PROMOTE_TO_BISHOP_FLAG:
+      case this.PROMOTE_TO_BISHOP_FLAG:
         return Piece.BISHOP;
-      case PROMOTE_TO_QUEEN_FLAG:
+      case this.PROMOTE_TO_QUEEN_FLAG:
         return Piece.QUEEN;
       default:
         return 0;
     };
   };
-  isSameMove(a, b) {
+  static isSameMove(a, b) {
     return a.moveValue === b.moveValue;
+  };
+  static fromUCIString(str) {
+    const chunks = str.split(" ");
+    let moves = [];
+
+    for (const chunk of chunks) {
+      const squares = chunk.match(/[a-h]\d/gi);
+      let move = algebraicToSqNumber(squares[0]) | algebraicToSqNumber(squares[1]) << 6;
+
+      // castle flag
+      if (move === 132 || move === 388 || move === 3772 || move === 4028) {
+        move |= 0x2000;
+      };
+
+      // pawn double push flag
+      if ((move & 0x608) === 0x608 || (move & 0x830) === 0x830) {
+        move |= 0x3000;
+      };
+
+      switch (chunk.charCodeAt(4)) { // promotion flag
+        case 113: // queen
+        case 81:
+          move |= 0x4000;
+          break;
+        case 110: // knight
+        case 78:
+          move |= 0x5000;
+          break;
+        case 114: // rook
+        case 82:
+          move |= 0x6000;
+          break;
+        case 98: // bishop
+        case 66:
+          move |= 0x7000;
+          break;
+      };
+
+      moves.push(move);
+    };
+
+    return moves;
+  };
+  static fromBase64String(str) {
+    const base64char = "456789+/wxyz0123opqrstuvghijklmnYZabcdefQRSTUVWXIJKLMNOPABCDEFGH";
+    const chunks = str.match(/.{2}/g);
+    let moves = [];
+
+    for (const chunk of chunks) {
+      let move = base64char.indexOf(chunk[0]) | base64char.indexOf(chunk[1]) << 6;
+
+      // castle flag
+      if (move === 132 || move === 388 || move === 3772 || move === 4028) {
+        move |= 0x2000;
+      };
+
+      // pawn double push flag
+      if ((move & 0x608) === 0x608 || (move & 0x830) === 0x830) {
+        move |= 0x3000;
+      };
+
+      switch (chunk.charCodeAt(4)) { // promotion flag
+        case 113: // queen
+        case 81:
+          move |= 0x4000;
+          break;
+        case 110: // knight
+        case 78:
+          move |= 0x5000;
+          break;
+        case 114: // rook
+        case 82:
+          move |= 0x6000;
+          break;
+        case 98: // bishop
+        case 66:
+          move |= 0x7000;
+          break;
+      };
+
+      moves.push(move);
+    };
+
+    return moves;
   };
   toString() {
     const promotionPiece = ".kqrnbp.";
-    return sqNumberToAlgebraic(this.moveValue >> 6) + sqNumberToAlgebraic(this.moveValue & 63) + promotionPiece[this.getPromotionPieceType()];
+    const promotionPieceType = promotionPiece[this.getPromotionPieceType(n)];
+    return sqNumberToAlgebraic(this.moveValue & 63) + sqNumberToAlgebraic(this.moveValue >> 6 & 63) + (promotionPieceType === "." ? "" : promotionPieceType);
   };
-  toBase64String() {
-    // const base64char = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  static toUCIString(n) {
+    const promotionPiece = ".kqrnbp.";
+    const promotionPieceType = promotionPiece[this.getPromotionPieceType(n)];
+    return sqNumberToAlgebraic(n & 63) + sqNumberToAlgebraic(n >> 6 & 63) + (promotionPieceType === "." ? "" : promotionPieceType);
+  };
+  static toBase64String(n) {
     const base64char = "456789+/wxyz0123opqrstuvghijklmnYZabcdefQRSTUVWXIJKLMNOPABCDEFGH";
-    return base64char[this.getStartSq()] + base64char[this.getTargetSq()] + this.getPromotionPieceType();
+    // const promotionPieceType = promotionPiece[this.getPromotionPieceType(n)];
+    return base64char[this.getStartSq(n)] + base64char[this.getTargetSq(n)];
   };
 };
 
 let bitboardToString = function (bitboard) {
   return bitboard.toString(2).padStart(64, "0").match(/.{8}/g).join("\n");
 };
-
-/*
-const BitboardHelperObj = await WebAssembly.instantiateStreaming(fetch("data:application/wasm;base64,"));
-const BitboardHelper = {
-  "genPawnMoves": BitboardHelperObj.instance.exports.a,
-  "genKnightMoves": BitboardHelperObj.instance.exports.b,
-  "genKingMoves": BitboardHelperObj.instance.exports.c,
-  "genSliderMoves": BitboardHelperObj.instance.exports.d,
-  "setSquare": BitboardHelperObj.instance.exports.e,
-  "clearSquare": BitboardHelperObj.instance.exports.f,
-  "toggleSquare": BitboardHelperObj.instance.exports.h,
-  "squareIsSet": BitboardHelperObj.instance.exports.i,
-  "clearAndGetIndexOfLSB": BitboardHelperObj.instance.exports.j,
-  "getNumberOfSetBits": BitboardHelperObj.instance.exports.k
-};
-*/
