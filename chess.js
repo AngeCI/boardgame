@@ -59,6 +59,9 @@ let Board = class {
   #cnv = new OffscreenCanvas(800, 800);
   #ctx; // #ctx = #cnv.getContext("2d");
 
+  #cnvLightColor = "#f1d9c0";
+  #cnvDarkColor = "#a97a65";
+
   isWhiteToMove;
   plyCount;
   moves = [];
@@ -79,7 +82,7 @@ let Board = class {
   #blackPawns = [];
 
   // Bitboards
-  pieceBitboards;
+  pieceBitboards = new Uint32Array();
   colourBitboards;
   allPiecesBitboard;
   FriendlyOrthogonalSliders;
@@ -94,13 +97,12 @@ let Board = class {
   };
 
   redrawCanvas(sprites = ChessSpritesImageBitmap) {
-    const colours = ["#f1d9c0", "#a97a65"];
     const labels = [" ", "wK", "wQ", "wR", "wN", "wB", "wP", " ", " ", "bK", "bQ", "bR", "bN", "bB", "bP", " "];
     let pieceNum;
 
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
-        this.#ctx.fillStyle = colours[(y ^ x) & 1];
+        this.#ctx.fillStyle = ((y ^ x) & 1) ? this.#cnvDarkColor : this.#cnvLightColor;
         this.#ctx.fillRect(x * 100, y * 100, 100, 100);
 
         pieceNum = this.#squares[(y << 3) + x] - 8;
@@ -285,7 +287,7 @@ let Board = class {
       boardGrids = boardRows[i].children;
       for (let j = 0; j < 8; j++) {
         boardGrids[j].innerHTML = "";
-        pieceNum = this.#squares[rotated ? (63 - (i << 3) - j) : ((i << 3) + j)] - 8;
+        pieceNum = this.#squares[rotated ? ((i << 3) + j ^ 63) : ((i << 3) + j)] - 8;
         let sprite = sprites[labels[pieceNum]];
         if (sprite) {
           boardGrids[j].appendChild(sprite.cloneNode(true));
@@ -301,7 +303,7 @@ let Board = class {
     for (let i = 0; i < 8; i++) {
       boardGrids = boardRows[i].children;
       for (let j = 0; j < 8; j++) {
-        pieceNum = this.#squares[rotated ? (63 - (i << 3) - j) : ((i << 3) + j)];
+        pieceNum = this.#squares[rotated ? ((i << 3) + j ^ 63) : ((i << 3) + j)];
         pieceType = pieceNum & 7;
         pieceColor = ((pieceNum >> 3) & 3) - 1;
         boardGrids[j].innerText = labels[pieceType];
@@ -342,15 +344,29 @@ let Board = class {
 
     return output.join("");
   };
-  displayMove(move, boardEl, rotated = false) {
-    const convertFunc = (n) => (7 - (n >> 3)) << 3 | (n & 7);
-    const convertedSrc = convertFunc(Move.getStartSq(move));
-    const convertedDst = convertFunc(Move.getTargetSq(move));
+  displayMove(move, boardEl, rotated = false, sprites = ChessSpritesImageBitmap) {
+    const src = Move.getStartSq(move), dst = Move.getTargetSq(move);
 
-    boardEl.querySelector(`[data-index="${rotated ? 63 - convertedSrc : convertedSrc}"]`).classList.add("chess-lastmove-src");
-    boardEl.querySelector(`[data-index="${rotated ? 63 - convertedDst : convertedDst}"]`).classList.add("chess-lastmove-dst");
+    boardEl.querySelector(`[data-index="${rotated ? src ^ 7 : src ^ 56}"]`).classList.add("chess-lastmove-src");
+    boardEl.querySelector(`[data-index="${rotated ? dst ^ 7 : dst ^ 56}"]`).classList.add("chess-lastmove-dst");
+
+    // Update the canvas
+    const labels = [" ", "wK", "wQ", "wR", "wN", "wB", "wP", " ", " ", "bK", "bQ", "bR", "bN", "bB", "bP", " "];
+    // Source square
+    this.#ctx.fillStyle = ((src ^ (src >> 3)) & 1) ? this.#cnvLightColor : this.#cnvDarkColor;
+    this.#ctx.fillRect((src & 7) * 100, (src >> 3 ^ 7) * 100, 100, 100);
+    // Destination square
+    this.#ctx.fillStyle = ((dst ^ (dst >> 3)) & 1) ? this.#cnvLightColor : this.#cnvDarkColor;
+    this.#ctx.fillRect((dst & 7) * 100, (dst >> 3 ^ 7) * 100, 100, 100);
+    /*
+    const sprite = sprites[labels[pieceNum]];
+    if (sprite) {
+      this.#ctx.drawImage(sprite, (dst & 7) * 100, (dst >> 3 ^ 7) * 100, 100, 100);
+    };
+    */
   };
-  makeMove(move) {
+  makeMove(move, boardEl) {
+    const src = Move.getStartSq(move), dst = Move.getTargetSq(move);
     // Todo
   };
   undoMove(move) {
