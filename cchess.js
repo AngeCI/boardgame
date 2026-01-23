@@ -56,6 +56,22 @@ let Board = class {
   plyCount;
   moves = [];
 
+  // Piece lists
+  // Store all lists in a 2D array: [colorIndex][pieceType]
+  // colorIndex 0 = Red, 1 = Black
+  #pieceLists = [
+    [[], [], [], [], [], [], [], []], // Red (Indices 0-7)
+    [[], [], [], [], [], [], [], []]  // Black (Indices 0-7)
+  ];
+  #allPieceLists = [[], []]; // [colorIndex] -> All occupied squares for that color
+
+  // Bitboards
+  pieceBitboards = new Uint32Array(24); // Bitboard for each piece type and colour (red pawns, red knights, ... black pawns, etc.)
+  colourBitboards = new Uint32Array(4); // Bitboards for all pieces of either colour (all red pieces, all black pieces)
+  allPiecesBitboard; // Bitboards for all oocupied squares
+
+  #isDirty = true; // Flag for lazy piece list and bitboard updates
+
   constructor() {
     this.#ctx = this.#cnv.getContext("2d");
   };
@@ -76,11 +92,48 @@ let Board = class {
       };
     };
   };
-  /*
   refreshPieceList() {
-    // Todo
+    // Clear all existing lists first
+    for (let i = 0; i < 2; i++) {
+      this.#allPieceLists[i].length = 0;
+      for (let j = 0; j < 8; j++) {
+        this.#pieceLists[i][j].length = 0;
+      };
+    };
+
+    // Populate lists
+    for (let i = 0; i < this.#squares.length; i++) {
+      const piece = this.#squares[i];
+      if (piece === Piece.NONE) continue;
+
+      // Extract color and type from the combined value
+      const colorIdx = (piece >> 3) - 1; // 0 for Red (8), 1 for Black (16)
+      const type = piece & Piece.TYPE_MASK;
+
+      // Add to specific list (e.g., Red Knights)
+      this.#pieceLists[colorIdx][type].push(i);
+
+      // Add to general list (e.g., All Red Pieces)
+      this.#allPieceLists[colorIdx].push(i);
+    };
   };
-  */
+  /**
+   * Call this whenever a square on the board changes.
+   */
+  #invalidate() {
+    this.#isDirty = true;
+  };
+  /**
+   * The "Lazy" update: only runs if the board has changed since the last request.
+   */
+  #ensureUpToDate() {
+    if (!this.#isDirty) return;
+
+    this.redrawCanvas();
+    this.refreshPieceList();
+
+    this.#isDirty = false;
+  };
   convert90to256(num) {
     const row = num * 7282 >>> 16; // Math.floor(num / 9)
     const column = (num * 7282 & 0xffff) * 9 >>> 16; // num % 9
@@ -122,8 +175,8 @@ let Board = class {
     this.isRedToMove = !(moveSide == "b");
     this.plyCount = (parseInt(plyCount) - 1 << 1) + !this.isRedToMove;
 
-    this.redrawCanvas();
-    // this.refreshPieceList();
+    this.#invalidate();
+    this.#ensureUpToDate();
   };
   importFromBase64(str) {
     const binArray = atob(str);
@@ -136,8 +189,8 @@ let Board = class {
       };
     };
 
-    this.redrawCanvas();
-    // this.refreshPieceList();
+    this.#invalidate();
+    this.#ensureUpToDate();
   };
   toString() {
     const pieceTable = " 1234567.KABNRCP.kabnrcp";
@@ -201,48 +254,30 @@ let Board = class {
   getPiece(square) {
     return this.#squares[square];
   };
-  /*
   getPieceList(pieceType, color) {
-    color = (color >> 3) - 1;
-    switch (pieceType) {
-      case Piece.KING:
-        return color ? this.#blackKings : this.#redKings;
-        break;
-      case Piece.ADVISOR:
-        return color ? this.#blackAdvisors : this.#redAdvisors;
-        break;
-      case Piece.BISHOP:
-        return color ? this.#blackBishops : this.#redBishops;
-        break;
-      case Piece.KNIGHT:
-        return color ? this.#blackKnights : this.#redKnights;
-        break;
-      case Piece.ROOK:
-        return color ? this.#blackRooks : this.#redRooks;
-        break;
-      case Piece.CANNON:
-        return color ? this.#blackCannons : this.#redCannons;
-        break;
-      case Piece.PAWN:
-        return color ? this.#blackPawns : this.#redPawns;
-        break;
-      default:
-        throw new TypeError();
-        break;
-    };
+    this.#ensureUpToDate();
+    const colorIdx = (color >> 3) - 1; // 0 for Red (8), 1 for Black (16)
+    const list = this.#pieceLists[colorIdx]?.[pieceType];
+
+    if (!list) throw new TypeError("Invalid piece type or color.");
+    return list;
   };
   getAllPieceLists() {
+    this.#ensureUpToDate();
     return {
-      "king": [this.#redKings, this.#blackKings],
-      "advisor": [this.#redAdvisors, this.#blackAdvisors],
-      "bishop": [this.#redBishops, this.#blackBishops],
-      "knight": [this.#redKnights, this.#blackKnights],
-      "rook": [this.#redRooks, this.#blackRooks],
-      "cannon": [this.#redCannons, this.#blackCannons],
-      "pawn": [this.#redPawns, this.#blackPawns]
+      "king": [this.#pieceLists[0][Piece.KING], this.#pieceLists[1][Piece.KING]],
+      "advisor": [this.#pieceLists[0][Piece.ADVISOR], this.#pieceLists[1][Piece.ADVISOR]],
+      "bishop": [this.#pieceLists[0][Piece.BISHOP], this.#pieceLists[1][Piece.BISHOP]],
+      "knight": [this.#pieceLists[0][Piece.KNIGHT], this.#pieceLists[1][Piece.KNIGHT]],
+      "rook": [this.#pieceLists[0][Piece.ROOK], this.#pieceLists[1][Piece.ROOK]],
+      "cannon": [this.#pieceLists[0][Piece.CANNON], this.#pieceLists[1][Piece.CANNON]],
+      "pawn": [this.#pieceLists[0][Piece.PAWN], this.#pieceLists[1][Piece.PAWN]],
+      "allPieces": this.#allPieceLists
     };
   };
+  /*
   getPieceBitboard(type, isRed) {
+    this.#ensureUpToDate();
     // Todo
   };
   */
@@ -341,6 +376,7 @@ let Board = class {
   */
   setPiece(index, newPiece) {
     this.#squares[this.convert90to256(index)] = newPiece;
+    this.#invalidate();
   };
 };
 
@@ -356,6 +392,9 @@ let Piece = {
 
   "RED": 8,
   "BLACK": 16,
+
+  "TYPE_MASK": 7,
+  "COLOR_MASK": 24,
 
   "isColour": function (piece) {
     return piece >> 3;
@@ -441,4 +480,48 @@ let Move = class {
 
 let bitboardToString = function (bitboard) {
   return bitboard.toString(2).padStart(64, "0").match(/.{8}/g).join("\n");
+};
+
+let bitboardToList = function (bitboard) {
+  let low = 0, high = 0;
+
+  if (typeof bitboard === "bigint") {
+    low = Number(input & 0xffffffffn);
+    high = Number(input >> 32n);
+  } else if (input.length >= 2) {
+    low = bitboard[0];
+    high = bitboard[1];
+  } else {
+    throw new TypeError();
+  };
+
+  const arr = [];
+  const scan = (val, offset) => {
+    // Convert to unsigned for bitwise consistency
+    let uVal = val >>> 0; 
+    while (uVal !== 0) {
+      const lsb = val & -val;
+      const index = 31 - Math.clz32(lsb);
+      arr.push(index + offset);
+      uVal ^= lsb;
+    };
+  };
+
+  scan(low, 0);
+  scan(high, 32);
+  return arr;
+};
+
+let listToBitboard = function (arr) {
+  let bitboard = new Uint32Array(2);
+  for (const e of arr) {
+    if (e < 64) {
+      if (e < 32) {
+        bitboard[1] |= 1 << (e ^ 31);
+      } else {
+        bitboard[0] |= 1 << (e ^ 63);
+      };
+    };
+  };
+  return bitboard;
 };

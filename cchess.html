@@ -309,6 +309,18 @@ document.getElementById("step-count").addEventListener("input", (ev) => {
   };
 });
 
+document.getElementById("btn-next").addEventListener("click", () => {
+  if (document.getElementById("step-count").value < document.getElementById("step-total").textContent) {
+    const moveNum = document.getElementById("step-count").value;
+    board.makeMove(board.moves[moveNum]);
+    document.getElementById("textbox-fen").value = board.getFENString();
+    document.getElementById("textbox-b64pos").value = board.toBase64String();
+    board.displayMove(board.moves[moveNum], boardEl, boardRotated);
+    // board.fillGameStates();
+    document.getElementById("step-count").value++;
+  }
+});
+
 document.getElementById("image-capture-btn").addEventListener("click", async () => {
   let blob = await board.getImage();
   await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
