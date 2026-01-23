@@ -144,11 +144,12 @@ body {
     </div>
     <div>
       <label for="textbox-ucimoves">UCI/UCCI move notation:</label>
-      <input type="text" id="textbox-ucimoves" disabled />
+      <input type="text" id="textbox-ucimoves" />
       <div class="popup" style="display: inline;">
         <button id="ucimoves-copy-btn">Copy UCI/UCCI moves</button>
         <span class="popuptext-below" id="ucimoves-copy-popup">String copied</span>
       </div>
+      <button id="btn-import-ucimoves">Parse UCI moves</button>
     </div>
     <hr />
     <div>
@@ -196,6 +197,7 @@ board.fillGameStates = function () {
     document.getElementById("black-to-move").checked = true;
   };
   document.getElementById("step-count").value = this.plyCount;
+  document.getElementById("step-total").textContent = this.moves.length;
 };
 
 let boardEdit = function (ev) {
@@ -233,6 +235,16 @@ const setMode = function (mode) {
   currentMode = mode;
   boardEl.className = `mode-${mode}`;
 };
+
+document.getElementById("load-record").addEventListener("input", (ev) => {
+  const file = ev.target.files[0];
+  switch (file.type) {
+    case "application/x-chess-pgn":
+      break;
+    default: // interpret as custom format
+      break;
+  };
+});
 
 const toggleEditModeButtons = function (enabled) {
   const disabled = !enabled;
@@ -351,18 +363,28 @@ document.getElementById("textboard-copy-btn").addEventListener("click", async ()
 
 document.getElementById("btn-import-b64moves").addEventListener("click", () => {
   board.parseBase64Moves(document.getElementById("textbox-b64moves").value);
+
+  document.getElementById("textbox-ucimoves").value = board.toUCIMoves();
+  document.getElementById("step-total").textContent = this.moves.length;
 });
 
 document.getElementById("b64moves-copy-btn").addEventListener("click", async () => {
-  await navigator.clipboard.writeText(board.toString());
+  await navigator.clipboard.writeText(document.getElementById("textbox-b64moves").value);
   document.getElementById("b64moves-copy-popup").classList.toggle("show");
   setTimeout(() => {
     document.getElementById("b64moves-copy-popup").classList.toggle("show");
   }, 5000);
 });
 
+document.getElementById("btn-import-ucimoves").addEventListener("click", () => {
+  board.parseUCIMoves(document.getElementById("textbox-ucimoves").value);
+
+  document.getElementById("textbox-b64moves").value = board.toBase64Moves();
+  document.getElementById("step-total").textContent = this.moves.length;
+});
+
 document.getElementById("ucimoves-copy-btn").addEventListener("click", async () => {
-  await navigator.clipboard.writeText(board.toString());
+  await navigator.clipboard.writeText(document.getElementById("textbox-ucimoves").value);
   document.getElementById("ucimoves-copy-popup").classList.toggle("show");
   setTimeout(() => {
     document.getElementById("ucimoves-copy-popup").classList.toggle("show");

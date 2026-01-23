@@ -59,12 +59,19 @@ let Board = class {
   #cnv = new OffscreenCanvas(800, 800);
   #ctx; // #ctx = #cnv.getContext("2d");
 
-  #cnvLightColor = "#f1d9c0";
-  #cnvDarkColor = "#a97a65";
+  cnvLightColor = "#f1d9c0";
+  cnvDarkColor = "#a97a65";
 
   isWhiteToMove;
   plyCount;
   moves = [];
+  enPassantFile = null;
+
+  castlingRights = 15;
+  whiteKingsideCastleMask = 1;
+  whiteQueensideCastleMask = 2;
+  blackKingsideCastleMask = 4;
+  blackQueensideCastleMask = 8;
 
   // Piece lists
   #pieceLists = [];
@@ -82,8 +89,8 @@ let Board = class {
   #blackPawns = [];
 
   // Bitboards
-  pieceBitboards = new Uint32Array();
-  colourBitboards;
+  pieceBitboards = new Uint32Array(24);
+  colourBitboards = new Uint32Array(4);
   allPiecesBitboard;
   FriendlyOrthogonalSliders;
   FriendlyDiagonalSliders;
@@ -102,7 +109,7 @@ let Board = class {
 
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
-        this.#ctx.fillStyle = ((y ^ x) & 1) ? this.#cnvDarkColor : this.#cnvLightColor;
+        this.#ctx.fillStyle = ((y ^ x) & 1) ? this.cnvDarkColor : this.cnvLightColor;
         this.#ctx.fillRect(x * 100, y * 100, 100, 100);
 
         pieceNum = this.#squares[(y << 3) + x] - 8;
@@ -139,7 +146,7 @@ let Board = class {
       "p": Piece.PAWN
     };
 
-    const [board, moveSide, , , , plyCount] = fen.split(" ");
+    const [board, moveSide, castlingRights, , , plyCount] = fen.split(" ");
     let file = 0, rank = 0;
     for (let symbol of board) {
       if (symbol === "/") {
@@ -160,11 +167,14 @@ let Board = class {
     this.isWhiteToMove = !(moveSide === "b");
     this.plyCount = (parseInt(plyCount) - 1 << 1) + !this.isWhiteToMove;
 
+    // this.castlingRights = castlingRights;
+
     this.redrawCanvas();
     this.refreshPieceList();
   };
   importFromBase64(str) {
-    const binArray = atob(str);
+    const chunks = str.split(":");
+    const binArray = atob(chunks[0]);
     for (let i = 0; i < binArray.length; i++) {
       let a = binArray.charCodeAt(i);
       for (let j = 0; j < 2; j++) {
@@ -221,7 +231,9 @@ let Board = class {
         output += "/";
     };
 
-    return `${output} ${this.isWhiteToMove ? "w" : "b"} - - 0 ${(this.plyCount >> 1) + 1}`;
+    const castlingRights = ["-", "K", "Q", "KQ", "k", "Kk", "Qk", "KQk", "q", "Kq", "Qq", "KQq", "kq", "Kkq", "Qkq", "KQkq"][this.castlingRights];
+
+    return `${output} ${this.isWhiteToMove ? "w" : "b"} ${castlingRights} - 0 ${(this.plyCount >> 1) + 1}`;
   };
   toBase64String() {
     let arr = new Uint8Array(32);
@@ -353,24 +365,28 @@ let Board = class {
     // Update the canvas
     const labels = [" ", "wK", "wQ", "wR", "wN", "wB", "wP", " ", " ", "bK", "bQ", "bR", "bN", "bB", "bP", " "];
     // Source square
-    this.#ctx.fillStyle = ((src ^ (src >> 3)) & 1) ? this.#cnvLightColor : this.#cnvDarkColor;
+    this.#ctx.fillStyle = ((src ^ (src >> 3)) & 1) ? this.cnvLightColor : this.cnvDarkColor;
     this.#ctx.fillRect((src & 7) * 100, (src >> 3 ^ 7) * 100, 100, 100);
     // Destination square
-    this.#ctx.fillStyle = ((dst ^ (dst >> 3)) & 1) ? this.#cnvLightColor : this.#cnvDarkColor;
+    this.#ctx.fillStyle = ((dst ^ (dst >> 3)) & 1) ? this.cnvLightColor : this.cnvDarkColor;
     this.#ctx.fillRect((dst & 7) * 100, (dst >> 3 ^ 7) * 100, 100, 100);
-    /*
-    const sprite = sprites[labels[pieceNum]];
+    const sprite = sprites[labels[this.#squares[dst ^ 56] - 8]];
     if (sprite) {
       this.#ctx.drawImage(sprite, (dst & 7) * 100, (dst >> 3 ^ 7) * 100, 100, 100);
     };
-    */
   };
-  makeMove(move, boardEl) {
+  makeMove(move) {
     const src = Move.getStartSq(move), dst = Move.getTargetSq(move);
     // Todo
   };
   undoMove(move) {
     // Todo
+  };
+  hasKingsideCastleRight(isWhite) {
+    return (this.castlingRights & (isWhite ? 1 : 4)) !== 0;
+  };
+  hasQueensideCastleRight(isWhite) {
+    return (this.castlingRights & (isWhite ? 2 : 8)) !== 0;
   };
   setPiece(index, newPiece) {
     this.#squares[index] = newPiece;

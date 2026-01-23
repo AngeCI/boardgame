@@ -54,7 +54,7 @@ let Board = class {
 
   isRedToMove;
   plyCount;
-  moves;
+  moves = [];
 
   constructor() {
     this.#ctx = this.#cnv.getContext("2d");
@@ -288,10 +288,53 @@ let Board = class {
   getImage() {
      return this.#cnv.convertToBlob();
   };
-  /*
+  parseUCIMoves(str) {
+    this.moves = Move.fromUCIString(str);
+  };
+  parseBase64Moves(str) {
+    this.moves = Move.fromBase64String(str);
+  };
+  toUCIMoves() {
+    let output = [];
+
+    for (const move of this.moves) {
+      output.push(Move.toUCIString(move));
+    };
+
+    return output.join(" ");
+  };
+  toBase64Moves(str) {
+    let output = [];
+
+    for (const move of this.moves) {
+      output.push(Move.toBase64String(move));
+    };
+
+    return output.join("");
+  };
+  displayMove(move, boardEl, rotated = false, sprites = ChessSpritesImageBitmap) {
+    const src = Move.getStartSq(move), dst = Move.getTargetSq(move);
+
+    boardEl.querySelector(`[data-index="${rotated ? src : 89 - src}"]`).classList.add("chess-lastmove-src");
+    boardEl.querySelector(`[data-index="${rotated ? dst : 89 - dst}"]`).classList.add("chess-lastmove-dst");
+
+    // Update the canvas
+    const labels = [" ", "wK", "wQ", "wR", "wN", "wB", "wP", " ", " ", "bK", "bQ", "bR", "bN", "bB", "bP", " "];
+    this.#ctx.fillStyle = "#eb5";
+    // Source square
+    this.#ctx.fillRect(((src * 7282 & 0xffff) * 9 >>> 16) * 100, (src * 7282 >>> 16) * 100, 100, 100);
+    // Destination square
+    this.#ctx.fillRect(((dst * 7282 & 0xffff) * 9 >>> 16) * 100, (dst * 7282 >>> 16) * 100, 100, 100);
+    const sprite = sprites[labels[this.#squares[dst] - 8]];
+    if (sprite) {
+      this.#ctx.drawImage(sprite, ((dst * 7282 & 0xffff) * 9 >>> 16) * 100, (dst * 7282 >>> 16) * 100, 100, 100);
+    };
+  };
   makeMove(move) {
+    const src = Move.getStartSq(move), dst = Move.getTargetSq(move);
     // Todo
   };
+  /*
   undoMove(move) {
     // Todo
   };
@@ -317,4 +360,85 @@ let Piece = {
   "isColour": function (piece) {
     return piece >> 3;
   }
+};
+
+let sqNumberToAlgebraic = function (n) {
+  return String.fromCharCode(((num * 7282 & 0xffff) * 9 >>> 16) + 97) + (9 - (num * 7282 >>> 16));
+};
+
+let algebraicToSqNumber = function (str) {
+  return str.charCodeAt(0) - 97 + (9 - str.charCodeAt(1) - 48) * 9;
+};
+
+let Move = class {
+  moveValue;
+
+  static START_SQ_MASK = 0x007f;
+  static TARGET_SQ_MASK = 0x3f80;
+
+  constructor(moveValue, targetSq) {
+    if (!targetSq) {
+      this.moveValue = moveValue;
+    } else {
+      this.moveValue = startSq | targetSq << 7;
+    };
+  };
+
+  static isNull(n) {
+    return n === 0;
+  };
+  static getStartSq(n) {
+    return n & this.START_SQ_MASK;
+  };;
+  static getTargetSq(n) {
+    return (n & this.TARGET_SQ_MASK) >> 7;
+  };
+  nullMove = new Move(0);
+  static isSameMove(a, b) {
+    return a.moveValue === b.moveValue;
+  };
+  static fromUCIString(str) {
+    const chunks = str.split(" ");
+    let moves = [];
+
+    for (const chunk of chunks) {
+      const squares = chunk.match(/[a-h]\d/gi);
+      let move = algebraicToSqNumber(squares[0]) | algebraicToSqNumber(squares[1]) << 7;
+
+      moves.push(move);
+    };
+
+    return moves;
+  };
+  static fromBase64String(str) {
+    const base64char = "456789+/wxyz0123opqrstuvghijklmnYZabcdefQRSTUVWXIJKLMNOPABCDEFGH";
+    const chunks = str.match(/.{2}/g);
+    let moves = [];
+
+    for (const chunk of chunks) {
+      let move = base64char.indexOf(chunk[0]) | base64char.indexOf(chunk[1]) << 7;
+
+      moves.push(move);
+    };
+
+    return moves;
+  };
+  toString() {
+    const promotionPiece = ".kqrnbp.";
+    const promotionPieceType = promotionPiece[this.getPromotionPieceType(n)];
+    return sqNumberToAlgebraic(this.moveValue & 63) + sqNumberToAlgebraic(this.moveValue >> 6 & 63);
+  };
+  static toUCIString(n) {
+    const promotionPiece = ".kqrnbp.";
+    const promotionPieceType = promotionPiece[this.getPromotionPieceType(n)];
+    return sqNumberToAlgebraic(n & 63) + sqNumberToAlgebraic(n >> 6 & 63);
+  };
+  static toBase64String(n) {
+    const base64char = "456789+/wxyz0123opqrstuvghijklmnYZabcdefQRSTUVWXIJKLMNOPABCDEFGH";
+    return base64char[this.getStartSq(n)] + base64char[this.getTargetSq(n)];
+  };
+};
+
+let bitboardToString = function (bitboard) {
+  return bitboard.toString(2).padStart(64, "0").match(/.{8}/g).join("\n");
 };

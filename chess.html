@@ -380,6 +380,18 @@ document.getElementById("step-count").addEventListener("input", (ev) => {
   };
 });
 
+document.getElementById("btn-next").addEventListener("click", () => {
+  if (document.getElementById("step-count").value < document.getElementById("step-total").textContent) {
+    const moveNum = document.getElementById("step-count").value;
+    board.makeMove(board.moves[moveNum]);
+    document.getElementById("textbox-fen").value = board.getFENString();
+    document.getElementById("textbox-b64pos").value = board.toBase64String();
+    board.displayMove(board.moves[moveNum], boardEl, boardRotated);
+    // board.fillGameStates();
+    document.getElementById("step-count").value++;
+  }
+});
+
 document.getElementById("image-capture-btn").addEventListener("click", async () => {
   let blob = await board.getImage();
   await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
@@ -393,15 +405,22 @@ document.querySelectorAll(".color-scheme-preset").forEach((e) => {
   e.addEventListener("click", (ev) => {
     const { light, dark } = ev.target.closest(".color-scheme-preset").dataset;
     boardEl.parentElement.style.cssText = `--chess-board-light: ${light}; --chess-board-dark: ${dark};`;
+    board.cnvLightColor = light;
+    board.cnvDarkColor = dark;
+    board.redrawCanvas();
   });
 });
 
 document.getElementById("color-picker-light").addEventListener("input", (ev) => {
   boardEl.parentElement.style.setProperty('--chess-board-light', ev.target.value);
+  board.cnvLightColor = ev.target.value;
+  board.redrawCanvas();
 });
 
 document.getElementById("color-picker-dark").addEventListener("input", (ev) => {
   boardEl.parentElement.style.setProperty('--chess-board-dark', ev.target.value);
+  board.cnvDarkColor = ev.target.value;
+  board.redrawCanvas();
 });
 
 document.getElementById("rotate-board").addEventListener("input", (ev) => {
