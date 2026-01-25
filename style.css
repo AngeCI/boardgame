@@ -261,17 +261,17 @@ table.chess-container svg, table.cchess-container svg {
 .coords > span {
   flex: 1 1 auto;
 }
-.ranks:nth-child(odd) {
-  color: #fff;
+.ranks :nth-child(odd) {
+  color: var(--chess-board-dark);
 }
-.ranks:nth-child(even) {
-  color: #fff;
+.ranks :nth-child(even) {
+  color: var(--chess-board-light);
 }
-.files:nth-child(odd) {
-  color: #fff;
+.files :nth-child(odd) {
+  color: var(--chess-board-light);
 }
-.files:nth-child(even) {
-  color: #fff;
+.files :nth-child(even) {
+  color: var(--chess-board-dark);
 }
 .cchess-container {
   border-collapse: collapse;

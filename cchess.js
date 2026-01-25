@@ -344,7 +344,7 @@ let Board = class {
 
     return output.join("");
   };
-  displayMove(move, boardEl, rotated = false, sprites = CchessSprites) {
+  displayMove(move, boardEl, rotated = false, sprites = CChessSprites) {
     const src = Move.getStartSq(move), dst = Move.getTargetSq(move);
 
     const srcDOM = boardEl.querySelector(`[data-index="${rotated ? src : 89 - src}"]`);

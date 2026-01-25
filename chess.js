@@ -1,5 +1,16 @@
 "use strict";
 
+if (!Uint8Array.fromBase64) {
+  Uint8Array.fromBase64 = function (base64) {
+    const str = window.atob(base64);
+    const arr = new Uint8Array(str.length);
+    for (let i = 0; i < str.length; i++) {
+      arr[i] = str.charCodeAt(i);
+    };
+    return arr;
+  };
+};
+
 let ChessSprites = {};
 let ChessSpritesImageBitmap = {};
 const ChessSpritesMap = ["wK", "wQ", "wB", "wN", "wR", "wP", "bK", "bQ", "bB", "bN", "bR", "bP"];
@@ -211,13 +222,12 @@ let Board = class {
       throw new TypeError(`Unable to parse castling rights: "${castlingRights}". Only 'K', 'Q', 'k', 'q', or '-' are allowed.`);
     };
 
-    if (castlingRights === "-") this.castlingRights = 0;
-    else {
-      if (castlingRights.includes("K")) this.castlingRights |= Board.WHITE_KINGSIDE;
-      if (castlingRights.includes("Q")) this.castlingRights |= Board.WHITE_QUEENSIDE;
-      if (castlingRights.includes("k")) this.castlingRights |= Board.BLACK_KINGSIDE;
-      if (castlingRights.includes("q")) this.castlingRights |= Board.BLACK_QUEENSIDE;
-    };
+    this.castlingRights = 0;
+
+    if (castlingRights.includes("K")) this.castlingRights |= Board.WHITE_KINGSIDE;
+    if (castlingRights.includes("Q")) this.castlingRights |= Board.WHITE_QUEENSIDE;
+    if (castlingRights.includes("k")) this.castlingRights |= Board.BLACK_KINGSIDE;
+    if (castlingRights.includes("q")) this.castlingRights |= Board.BLACK_QUEENSIDE;
 
     if (new Set(castlingRights).size !== castlingRights.length) {
       throw new TypeError(`Invalid castling rights: Duplicate characters found in "${castlingRights}"`);
@@ -278,6 +288,14 @@ let Board = class {
       };
     };
 
+    if (chunk[1]) {
+      const gameState = Uint8Array.fromBase64(chunk[1]);
+      this.isWhiteToMove = !(gameState[0] & 128); // 0 for white, 1 for black
+      this.castlingRights = gameState[0] >> 3;
+      this.enPassantFile = (gameState[1] & 128) ? (gameState[0] & 7) : null;
+      this.plyCount = ((gameState[1] & 1) << 8) + gameState[2];
+    };
+
     this.#invalidate();
     this.#ensureUpToDate();
   };
@@ -332,7 +350,12 @@ let Board = class {
     if (this.castlingRights & Board.BLACK_QUEENSIDE) castlingRights += "q";
     if (!castlingRights) castlingRights = "-";
 
-    return `${output} ${this.isWhiteToMove ? "w" : "b"} ${castlingRights} - 0 ${(this.plyCount >> 1) + 1}`;
+    let epTarget = "-";
+    if (this.enPassantFile) {
+      epTarget = String.fromCharCode(this.enPassantFile + 97) + (this.isWhiteToMove ? 6 : 3);
+    };
+
+    return `${output} ${this.isWhiteToMove ? "w" : "b"} ${castlingRights} ${epTarget} 0 ${(this.plyCount >> 1) + 1}`;
   };
   toBase64String() {
     let arr = new Uint8Array(32);
@@ -345,7 +368,13 @@ let Board = class {
 
       arr[i] = (high << 4) | low;
     };
-    return btoa(String.fromCharCode.apply(null, arr)).slice(0, -1) + ":"; // remove the trailing '='
+
+    let gameState = new Uint8Array(3);
+    gameState[0] = (!this.isWhiteToMove << 7) | (this.castlingRights << 3) | (this.enPassantFile);
+    gameState[1] = (!!this.enPassantFile << 7) | (this.plyCount >> 8);
+    gameState[2] = this.plyCount;
+
+    return btoa(String.fromCharCode.apply(null, arr)).slice(0, -1) + ":" + btoa(String.fromCharCode.apply(null, gameState)); // remove the trailing '='
   };
   getPiece(square) {
     return this.#squares[square];

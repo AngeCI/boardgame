@@ -377,7 +377,7 @@ document.getElementById("btn-import-b64moves").addEventListener("click", () => {
   board.parseBase64Moves(document.getElementById("textbox-b64moves").value);
 
   document.getElementById("textbox-ucimoves").value = board.toUCIMoves();
-  document.getElementById("step-total").textContent = this.moves.length;
+  document.getElementById("step-total").textContent = board.moves.length;
 });
 
 document.getElementById("b64moves-copy-btn").addEventListener("click", async () => {
@@ -392,7 +392,7 @@ document.getElementById("btn-import-ucimoves").addEventListener("click", () => {
   board.parseUCIMoves(document.getElementById("textbox-ucimoves").value);
 
   document.getElementById("textbox-b64moves").value = board.toBase64Moves();
-  document.getElementById("step-total").textContent = this.moves.length;
+  document.getElementById("step-total").textContent = board.moves.length;
 });
 
 document.getElementById("ucimoves-copy-btn").addEventListener("click", async () => {
