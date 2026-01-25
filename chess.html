@@ -33,7 +33,7 @@ body {
 <body>
 <div id="grid">
   <div></div>
-  <div style="position: relative; max-height: 100vh;">
+  <div style="position: relative; max-height: 100vh; aspect-ratio: 1 / 1;">
     <table class="chess-container">
       <tr><td data-index="0"></td><td data-index="1"></td><td data-index="2"></td><td data-index="3"></td><td data-index="4"></td><td data-index="5"></td><td data-index="6"></td><td data-index="7"></td></tr>
       <tr><td data-index="8"></td><td data-index="9"></td><td data-index="10"></td><td data-index="11"></td><td data-index="12"></td><td data-index="13"></td><td data-index="14"></td><td data-index="15"></td></tr>
@@ -381,12 +381,13 @@ document.getElementById("step-count").addEventListener("input", (ev) => {
 });
 
 document.getElementById("btn-next").addEventListener("click", () => {
-  if (document.getElementById("step-count").value < document.getElementById("step-total").textContent) {
-    const moveNum = document.getElementById("step-count").value;
+  const moveNum = parseInt(document.getElementById("step-count").value);
+  if (moveNum < document.getElementById("step-total").textContent) {
     board.makeMove(board.moves[moveNum]);
     document.getElementById("textbox-fen").value = board.getFENString();
     document.getElementById("textbox-b64pos").value = board.toBase64String();
     board.displayMove(board.moves[moveNum], boardEl, boardRotated);
+    board.drawBoard(boardEl, boardRotated);
     // board.fillGameStates();
     document.getElementById("step-count").value++;
   }

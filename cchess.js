@@ -53,7 +53,7 @@ let Board = class {
   #FILE_RIGHT = 11;
 
   isRedToMove;
-  plyCount;
+  plyCount = 0;
   moves = [];
 
   // Piece lists
@@ -110,11 +110,8 @@ let Board = class {
       const colorIdx = (piece >> 3) - 1; // 0 for Red (8), 1 for Black (16)
       const type = piece & Piece.TYPE_MASK;
 
-      // Add to specific list (e.g., Red Knights)
-      this.#pieceLists[colorIdx][type].push(i);
-
-      // Add to general list (e.g., All Red Pieces)
-      this.#allPieceLists[colorIdx].push(i);
+      this.#pieceLists[colorIdx][type].push(i); // Add to specific list (e.g., Red Knights)
+      this.#allPieceLists[colorIdx].push(i); // Add to general list (e.g., All Red Pieces)
     };
   };
   /**
@@ -347,14 +344,28 @@ let Board = class {
 
     return output.join("");
   };
-  displayMove(move, boardEl, rotated = false, sprites = ChessSpritesImageBitmap) {
+  displayMove(move, boardEl, rotated = false, sprites = CchessSprites) {
     const src = Move.getStartSq(move), dst = Move.getTargetSq(move);
 
-    boardEl.querySelector(`[data-index="${rotated ? src : 89 - src}"]`).classList.add("chess-lastmove-src");
-    boardEl.querySelector(`[data-index="${rotated ? dst : 89 - dst}"]`).classList.add("chess-lastmove-dst");
+    const srcDOM = boardEl.querySelector(`[data-index="${rotated ? src : 89 - src}"]`);
+    const dstDOM = boardEl.querySelector(`[data-index="${rotated ? dst : 89 - dst}"]`);
+
+    srcDOM.classList.add("chess-lastmove-src");
+    dstDOM.classList.add("chess-lastmove-dst");
+
+    srcDOM.innerHTML = "";
+
+    const labels = [" ", "rK", "rA", "rB", "rN", "rR", "rC", "rP", " ", "bK", "bA", "bB", "bN", "bR", "bC", "bP"];
+    let sprite = sprites[labels[this.#squares[dst ^ 56] - 8]];
+    if (sprite) {
+      dstDOM.appendChild(sprite.cloneNode(true));
+    };
+  };
+  makeMoveCanvas(move, sprites = CChessSpritesImageBitmap) {
+    const src = Move.getStartSq(move), dst = Move.getTargetSq(move);
 
     // Update the canvas
-    const labels = [" ", "wK", "wQ", "wR", "wN", "wB", "wP", " ", " ", "bK", "bQ", "bR", "bN", "bB", "bP", " "];
+    const labels = [" ", "rK", "rA", "rB", "rN", "rR", "rC", "rP", " ", "bK", "bA", "bB", "bN", "bR", "bC", "bP"];
     this.#ctx.fillStyle = "#eb5";
     // Source square
     this.#ctx.fillRect(((src * 7282 & 0xffff) * 9 >>> 16) * 100, (src * 7282 >>> 16) * 100, 100, 100);
@@ -364,10 +375,16 @@ let Board = class {
     if (sprite) {
       this.#ctx.drawImage(sprite, ((dst * 7282 & 0xffff) * 9 >>> 16) * 100, (dst * 7282 >>> 16) * 100, 100, 100);
     };
+
+    this.#isDirty = false;
   };
   makeMove(move) {
     const src = Move.getStartSq(move), dst = Move.getTargetSq(move);
     // Todo
+    this.#squares[dst] = this.#squares[src];
+    this.#squares[src] = Piece.NONE;
+    // this.#invalidate();
+    this.makeMoveCanvas(move);
   };
   /*
   undoMove(move) {
@@ -498,9 +515,9 @@ let bitboardToList = function (bitboard) {
   const arr = [];
   const scan = (val, offset) => {
     // Convert to unsigned for bitwise consistency
-    let uVal = val >>> 0; 
+    let uVal = val >>> 0;
     while (uVal !== 0) {
-      const lsb = val & -val;
+      const lsb = uVal & -uVal;
       const index = 31 - Math.clz32(lsb);
       arr.push(index + offset);
       uVal ^= lsb;

@@ -63,15 +63,15 @@ let Board = class {
   cnvDarkColor = "#a97a65";
 
   isWhiteToMove;
-  plyCount;
+  plyCount = 0;
   moves = [];
   enPassantFile = null;
 
   castlingRights = 15;
-  whiteKingsideCastleMask = 1;
-  whiteQueensideCastleMask = 2;
-  blackKingsideCastleMask = 4;
-  blackQueensideCastleMask = 8;
+  static WHITE_KINGSIDE  = 1; // 0001
+  static WHITE_QUEENSIDE = 2; // 0010
+  static BLACK_KINGSIDE  = 4; // 0100
+  static BLACK_QUEENSIDE = 8; // 1000
 
   // Piece lists
   // Store all lists in a 2D array: [colorIndex][pieceType]
@@ -95,8 +95,7 @@ let Board = class {
 
   constructor() {
     this.#ctx = this.#cnv.getContext("2d");
-    this.moves = [];
-    this.plyCount = 0;
+    this.allPiecesBitboard = new Uint32Array(2); // Needs to be declared once more?
   };
 
   redrawCanvas(sprites = ChessSpritesImageBitmap) {
@@ -125,6 +124,11 @@ let Board = class {
       };
     };
 
+    // Reset all bitboards to zero
+    this.pieceBitboards.fill(0);
+    this.colourBitboards.fill(0);
+    this.allPiecesBitboard.fill(0);
+
     // Populate lists
     for (let i = 0; i < this.#squares.length; i++) {
       const piece = this.#squares[i];
@@ -134,35 +138,16 @@ let Board = class {
       const colorIdx = (piece >> 3) - 1; // 0 for White (8), 1 for Black (16)
       const type = piece & Piece.TYPE_MASK;
 
-      // Add to specific list (e.g., White Knights)
-      this.#pieceLists[colorIdx][type].push(i);
-
-      // Add to general list (e.g., All White Pieces)
-      this.#allPieceLists[colorIdx].push(i);
-    };
-
-    this.allPiecesBitboard = new Uint32Array(2); // Needs to be declared once more?
-
-    // Reset all bitboards to zero
-    this.pieceBitboards.fill(0);
-    this.colourBitboards.fill(0);
-    this.allPiecesBitboard.fill(0);
-
-    // Single pass over the 64 squares
-    for (let sq = 0; sq < 64; sq++) {
-      const piece = this.#squares[sq];
-      if (piece === Piece.NONE) continue;
-
-      const colorIdx = (piece >> 3) - 1; // 0 for White (8), 1 for Black (16)
-      const typeIdx = (piece & Piece.TYPE_MASK) - 1; // 0-5 (Pawn-King)
+      this.#pieceLists[colorIdx][type].push(i); // Add to specific list (e.g., White Knights)
+      this.#allPieceLists[colorIdx].push(i); // Add to general list (e.g., All White Pieces)
 
       // Calculate bit position
       // wordIdx is 0 for squares 0-31, 1 for squares 32-63
-      const wordIdx = sq >> 5;
-      const bit = 1 << (sq & 31);
+      const wordIdx = i >> 5;
+      const bit = 1 << (i & 31);
 
       // Update Piece Bitboard: (color * 6 types + type) * 2 words + wordIdx
-      const pbbIdx = ((colorIdx * 6 + typeIdx) << 1) + wordIdx;
+      const pbbIdx = ((colorIdx * 6 + type - 1) << 1) + wordIdx;
       this.pieceBitboards[pbbIdx] |= bit;
 
       // Update Color Bitboard: (color * 2 words) + wordIdx
@@ -171,7 +156,7 @@ let Board = class {
 
       // Update All Pieces Bitboard
       this.allPiecesBitboard[wordIdx] |= bit;
-    }
+    };
   };
   /**
    * Call this whenever a square on the board changes.
@@ -201,7 +186,7 @@ let Board = class {
       "p": Piece.PAWN
     };
 
-    const [board, moveSide, castlingRights, , , plyCount] = fen.split(" ");
+    const [board, moveSide, castlingRights, epTarget, , plyCount] = fen.split(" ");
     let file = 0, rank = 0;
     for (let symbol of board) {
       if (symbol === "/") {
@@ -220,6 +205,60 @@ let Board = class {
     };
 
     this.isWhiteToMove = !(moveSide === "b");
+
+    const castlingRightsPattern = /^(?:[KQkq]+|-)$/;
+    if (!castlingRightsPattern.test(castlingRights)) {
+      throw new TypeError(`Unable to parse castling rights: "${castlingRights}". Only 'K', 'Q', 'k', 'q', or '-' are allowed.`);
+    };
+
+    if (castlingRights === "-") this.castlingRights = 0;
+    else {
+      if (castlingRights.includes("K")) this.castlingRights |= Board.WHITE_KINGSIDE;
+      if (castlingRights.includes("Q")) this.castlingRights |= Board.WHITE_QUEENSIDE;
+      if (castlingRights.includes("k")) this.castlingRights |= Board.BLACK_KINGSIDE;
+      if (castlingRights.includes("q")) this.castlingRights |= Board.BLACK_QUEENSIDE;
+    };
+
+    if (new Set(castlingRights).size !== castlingRights.length) {
+      throw new TypeError(`Invalid castling rights: Duplicate characters found in "${castlingRights}"`);
+    };
+
+    if (epTarget === "-") {
+      this.enPassantFile = null;
+    } else {
+      // 1. Basic Format Validation (Regex)
+      // Must be a-h followed by 3 (if black to move) or 6 (if white to move)
+      const epTargetPattern = /^[a-h][36]$/;
+      if (!epTargetPattern.test(epTarget)) {
+        throw new TypeError(`Invalid en passant target: ${epTarget}`);
+      };
+
+      const fileChar = epTarget[0];
+      const rankChar = epTarget[1];
+
+      // 2. Rank Validation based on side to move
+      // If White is to move, Black just moved p7->p5, so target is rank 6.
+      // If Black is to move, White just moved p2->p4, so target is rank 3.
+      const expectedRank = this.isWhiteToMove ? "6" : "3";
+      if (rankChar !== expectedRank) {
+        throw new TypeError(`En passant target ${epTarget} is invalid for ${this.isWhiteToMove ? "white" : "black"} to move.`);
+      };
+
+      // 3. Verify the pawn exists on the square "behind" the target
+      // If target is e6 (rank index 5), the pawn is on e5 (rank index 4).
+      // If target is e3 (rank index 2), the pawn is on e4 (rank index 3).
+      const targetSq = algebraicToSqNumber(epTarget) ^ 56;
+      const pawnSq = this.isWhiteToMove ? targetSq + 8 : targetSq - 8;
+      const piece = this.#squares[pawnSq];
+      const enemyColor = this.isWhiteToMove ? 16 : 8;
+      if ((piece & Piece.TYPE_MASK) !== Piece.PAWN || (piece & Piece.COLOR_MASK) !== enemyColor) {
+        throw new TypeError(`No enemy pawn positioned to allow en passant at ${epTarget}.`);
+      };
+
+      // 4. Success: Store the file index (0-7)
+      this.enPassantFile = fileChar.charCodeAt(0) - 97;
+    };
+
     this.plyCount = (parseInt(plyCount) - 1 << 1) + !this.isWhiteToMove;
 
     // this.castlingRights = castlingRights;
@@ -286,7 +325,12 @@ let Board = class {
         output += "/";
     };
 
-    const castlingRights = ["-", "K", "Q", "KQ", "k", "Kk", "Qk", "KQk", "q", "Kq", "Qq", "KQq", "kq", "Kkq", "Qkq", "KQkq"][this.castlingRights];
+    let castlingRights = "";
+    if (this.castlingRights & Board.WHITE_KINGSIDE)  castlingRights += "K";
+    if (this.castlingRights & Board.WHITE_QUEENSIDE) castlingRights += "Q";
+    if (this.castlingRights & Board.BLACK_KINGSIDE)  castlingRights += "k";
+    if (this.castlingRights & Board.BLACK_QUEENSIDE) castlingRights += "q";
+    if (!castlingRights) castlingRights = "-";
 
     return `${output} ${this.isWhiteToMove ? "w" : "b"} ${castlingRights} - 0 ${(this.plyCount >> 1) + 1}`;
   };
@@ -301,7 +345,7 @@ let Board = class {
 
       arr[i] = (high << 4) | low;
     };
-    return btoa(String.fromCharCode.apply(null, arr)).slice(0, -1); // remove the trailing '='
+    return btoa(String.fromCharCode.apply(null, arr)).slice(0, -1) + ":"; // remove the trailing '='
   };
   getPiece(square) {
     return this.#squares[square];
@@ -328,7 +372,6 @@ let Board = class {
   };
   getPieceBitboard(type, isWhite) {
     this.#ensureUpToDate();
-    const colorIdx = (color >> 3) - 1; // 0 for White (8), 1 for Black (16)
 
     if (type === 0) { // Empty pieces
       return new Uint32Array([
@@ -336,12 +379,12 @@ let Board = class {
         ~this.allPiecesBitboard[1]
       ]);
     } else if (type === 7) { // Assuming all pieces
-      const offset = colorIdx << 1;
+      const offset = !isWhite << 1;
       return colourBitboards.subarray(offset, offset + 2);
     } else if (type > 0 && type < 7) {
       this.#ensureUpToDate();
-      const bbIdx = (colorIdx * 6 + type - 1) << 1;
-      return pieceBitboards.subarray(bbIdx, bbIdx + 2);
+      const bbIdx = (!isWhite * 6 + type - 1) << 1;
+      return this.pieceBitboards.subarray(bbIdx, bbIdx + 2);
     } else {
       throw new TypeError("Invalid piece type.");
     };
@@ -412,11 +455,25 @@ let Board = class {
 
     return output.join("");
   };
-  displayMove(move, boardEl, rotated = false, sprites = ChessSpritesImageBitmap) {
+  displayMove(move, boardEl, rotated = false, sprites = ChessSprites) {
     const src = Move.getStartSq(move), dst = Move.getTargetSq(move);
 
-    boardEl.querySelector(`[data-index="${rotated ? src ^ 7 : src ^ 56}"]`).classList.add("chess-lastmove-src");
-    boardEl.querySelector(`[data-index="${rotated ? dst ^ 7 : dst ^ 56}"]`).classList.add("chess-lastmove-dst");
+    const srcDOM = boardEl.querySelector(`[data-index="${rotated ? src ^ 7 : src ^ 56}"]`);
+    const dstDOM = boardEl.querySelector(`[data-index="${rotated ? dst ^ 7 : dst ^ 56}"]`);
+
+    srcDOM.classList.add("chess-lastmove-src");
+    dstDOM.classList.add("chess-lastmove-dst");
+
+    srcDOM.innerHTML = "";
+
+    const labels = [" ", "wK", "wQ", "wR", "wN", "wB", "wP", " ", " ", "bK", "bQ", "bR", "bN", "bB", "bP", " "];
+    let sprite = sprites[labels[this.#squares[dst ^ 56] - 8]];
+    if (sprite) {
+      dstDOM.appendChild(sprite.cloneNode(true));
+    };
+  };
+  makeMoveCanvas(move, sprites = ChessSpritesImageBitmap) {
+    const src = Move.getStartSq(move), dst = Move.getTargetSq(move);
 
     // Update the canvas
     const labels = [" ", "wK", "wQ", "wR", "wN", "wB", "wP", " ", " ", "bK", "bQ", "bR", "bN", "bB", "bP", " "];
@@ -438,7 +495,8 @@ let Board = class {
     // Todo
     this.#squares[dst] = this.#squares[src];
     this.#squares[src] = Piece.NONE;
-    this.#invalidate();
+    // this.#invalidate();
+    this.makeMoveCanvas(move);
   };
   undoMove(move) {
     // Todo
@@ -449,9 +507,17 @@ let Board = class {
   hasQueensideCastleRight(isWhite) {
     return (this.castlingRights & (isWhite ? 2 : 8)) !== 0;
   };
-  setPiece(index, newPiece) {
+  setPiece(index, newPiece, sprites = ChessSpritesImageBitmap) {
     this.#squares[index] = newPiece;
-    this.#invalidate();
+
+    // Update the canvas
+    const labels = [" ", "wK", "wQ", "wR", "wN", "wB", "wP", " ", " ", "bK", "bQ", "bR", "bN", "bB", "bP", " "];
+    this.#ctx.fillStyle = ((index ^ (index >> 3)) & 1) ? this.cnvDarkColor : this.cnvLightColor;
+    this.#ctx.fillRect((index & 7) * 100, (index >> 3) * 100, 100, 100);
+    const sprite = sprites[labels[newPiece - 8]];
+    if (sprite) {
+      this.#ctx.drawImage(sprite, (index & 7) * 100, (index >> 3) * 100, 100, 100);
+    };
   };
   whitePiecesBitboard;
   blackPiecesBitboard;
@@ -651,7 +717,17 @@ let Move = class {
 };
 
 let bitboardToString = function (bitboard) {
-  return bitboard.toString(2).padStart(64, "0").match(/.{8}/g).join("\n");
+  if (typeof bitboard === "bigint") {
+    return bitboard.toString(2).padStart(64, "0").match(/.{8}/g).join("\n");
+  } else if (bitboard.length >= 2) {
+    let output = "";
+    for (const chunk of bitboard) {
+      output += chunk.toString(2).padStart(32, "0").match(/.{8}/g).join("\n") + "\n";
+    };
+    return output;
+  } else {
+    throw new TypeError();
+  };
 };
 
 let bitboardToList = function (bitboard) {
@@ -672,7 +748,7 @@ let bitboardToList = function (bitboard) {
     // Convert to unsigned for bitwise consistency
     let uVal = val >>> 0;
     while (uVal !== 0) {
-      const lsb = val & -val;
+      const lsb = uVal & -uVal;
       const index = 31 - Math.clz32(lsb);
       arr.push(index + offset);
       uVal ^= lsb;
