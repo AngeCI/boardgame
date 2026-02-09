@@ -1,5 +1,25 @@
 "use strict";
 
+if (typeof Uint8Array.fromBase64 !== "function") {
+  Uint8Array.fromBase64 = function (base64) {
+    if (typeof base64 !== "string") {
+      throw new TypeError("input argument must be a string");
+    };
+    const str = window.atob(base64);
+    const arr = new Uint8Array(str.length);
+    for (let i = 0; i < str.length; i++) {
+      arr[i] = str.charCodeAt(i);
+    };
+    return arr;
+  };
+};
+
+if (typeof Uint8Array.prototype.toBase64 !== "function") {
+  Uint8Array.prototype.toBase64 = function () {
+    return window.btoa(Array.from(this, (byte) => String.fromCharCode(byte)).join(""));
+  };
+};
+
 let CChessSprites = {};
 let CChessSpritesImageBitmap = {};
 const CChessSpritesMap = ["rK", "rA", "rB", "rN", "rR", "rC", "rP", "bK", "bA", "bB", "bN", "bR", "bC", "bP"];
@@ -176,7 +196,8 @@ let Board = class {
     this.#ensureUpToDate();
   };
   importFromBase64(str) {
-    const binArray = atob(str);
+    const chunks = str.split(":");
+    const binArray = Uint8Array.fromBase64(chunks[0]);
     for (let i = 0; i < binArray.length; i++) {
       let a = binArray.charCodeAt(i);
       for (let j = 0; j < 2; j++) {
@@ -184,6 +205,11 @@ let Board = class {
         this.#squares[this.convert90to256(i << 1 | j)] = nibble + ((nibble > 0) << 3);
         a <<= 4;
       };
+    };
+
+    if (chunks[1]) {
+      const gameState = Uint8Array.fromBase64(chunks[1]);
+      this.isWhiteToMove = !(gameState[0] & 128); // 0 for white, 1 for black
     };
 
     this.#invalidate();
@@ -246,7 +272,7 @@ let Board = class {
 
       arr[i] = (high << 4) | low;
     };
-    return btoa(String.fromCharCode.apply(null, arr));
+    return arr.toBase64();
   };
   getPiece(square) {
     return this.#squares[square];

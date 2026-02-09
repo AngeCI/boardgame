@@ -1,13 +1,22 @@
 "use strict";
 
-if (!Uint8Array.fromBase64) {
+if (typeof Uint8Array.fromBase64 !== "function") {
   Uint8Array.fromBase64 = function (base64) {
+    if (typeof base64 !== "string") {
+      throw new TypeError("input argument must be a string");
+    };
     const str = window.atob(base64);
     const arr = new Uint8Array(str.length);
     for (let i = 0; i < str.length; i++) {
       arr[i] = str.charCodeAt(i);
     };
     return arr;
+  };
+};
+
+if (typeof Uint8Array.prototype.toBase64 !== "function") {
+  Uint8Array.prototype.toBase64 = function () {
+    return window.btoa(Array.from(this, (byte) => String.fromCharCode(byte)).join(""));
   };
 };
 
@@ -57,6 +66,7 @@ const ChessSpritesMap = ["wK", "wQ", "wB", "wN", "wR", "wP", "bK", "bQ", "bB", "
     "genSliderMoves": BitboardHelperObj.instance.exports.d,
     "setSquare": BitboardHelperObj.instance.exports.e,
     "clearSquare": BitboardHelperObj.instance.exports.f,
+    "movePiece": BitboardHelperObj.instance.exports.g,
     "toggleSquare": BitboardHelperObj.instance.exports.h,
     "squareIsSet": BitboardHelperObj.instance.exports.i,
     "clearAndGetIndexOfLSB": BitboardHelperObj.instance.exports.j,
@@ -106,7 +116,7 @@ let Board = class {
 
   constructor() {
     this.#ctx = this.#cnv.getContext("2d");
-    this.allPiecesBitboard = new Uint32Array(2); // Needs to be declared once more?
+    //this.allPiecesBitboard = new Uint32Array(2); // Needs to be declared once more?
   };
 
   redrawCanvas(sprites = ChessSpritesImageBitmap) {
@@ -258,7 +268,7 @@ let Board = class {
       // If target is e6 (rank index 5), the pawn is on e5 (rank index 4).
       // If target is e3 (rank index 2), the pawn is on e4 (rank index 3).
       const targetSq = algebraicToSqNumber(epTarget) ^ 56;
-      const pawnSq = this.isWhiteToMove ? targetSq + 8 : targetSq - 8;
+      const pawnSq = targetSq + (this.isWhiteToMove ? 8 : -8);
       const piece = this.#squares[pawnSq];
       const enemyColor = this.isWhiteToMove ? 16 : 8;
       if ((piece & Piece.TYPE_MASK) !== Piece.PAWN || (piece & Piece.COLOR_MASK) !== enemyColor) {
@@ -278,9 +288,9 @@ let Board = class {
   };
   importFromBase64(str) {
     const chunks = str.split(":");
-    const binArray = atob(chunks[0]);
+    const binArray = Uint8Array.fromBase64(chunks[0]);
     for (let i = 0; i < binArray.length; i++) {
-      let a = binArray.charCodeAt(i);
+      let a = binArray[i];
       for (let j = 0; j < 2; j++) {
         const nibble = (a & 0xf0) >> 4;
         this.#squares[i << 1 | j] = nibble + ((nibble > 0) << 3);
@@ -288,8 +298,8 @@ let Board = class {
       };
     };
 
-    if (chunk[1]) {
-      const gameState = Uint8Array.fromBase64(chunk[1]);
+    if (chunks[1]) {
+      const gameState = Uint8Array.fromBase64(chunks[1]);
       this.isWhiteToMove = !(gameState[0] & 128); // 0 for white, 1 for black
       this.castlingRights = gameState[0] >> 3;
       this.enPassantFile = (gameState[1] & 128) ? (gameState[0] & 7) : null;
@@ -374,7 +384,7 @@ let Board = class {
     gameState[1] = (!!this.enPassantFile << 7) | (this.plyCount >> 8);
     gameState[2] = this.plyCount;
 
-    return btoa(String.fromCharCode.apply(null, arr)).slice(0, -1) + ":" + btoa(String.fromCharCode.apply(null, gameState)); // remove the trailing '='
+    return arr.toBase64().slice(0, -1) + ":" + gameState.toBase64(); // remove the trailing '='
   };
   getPiece(square) {
     return this.#squares[square];
@@ -519,11 +529,104 @@ let Board = class {
 
     this.#isDirty = false;
   };
+  #movePiece(move) {
+    const src = Move.getStartSq(move) ^ 56, dst = Move.getTargetSq(move) ^ 56, colorIdx = !this.isWhiteToMove, piece = this.#squares[src];
+
+    // BitboardHelper.movePiece(this.getPieceBitboard(piece, colorIdx), src, dst);
+    // BitboardHelper.movePiece(this.getPieceBitboard(7, colorIdx), src, dst);
+    // BitboardHelper.movePiece(allPiecesBitboard, src, dst);
+
+    // pieceLists[colorIdx][piece & Piece.TYPE_MASK];
+    this.#squares[dst] = piece;
+    this.#squares[src] = Piece.NONE;
+    
+  };
   makeMove(move) {
     const src = Move.getStartSq(move) ^ 56, dst = Move.getTargetSq(move) ^ 56;
-    // Todo
-    this.#squares[dst] = this.#squares[src];
-    this.#squares[src] = Piece.NONE;
+    const movedPiece = this.#squares[src];
+    const isEnPassant = Move.isEnPassant(move) && ((movedPiece & Piece.TYPE_MASK) === Piece.PAWN);
+    const capturedPiece = isEnPassant ? (this.isWhiteToMove ? 22 : 14) : this.#squares[dst];
+
+    this.#movePiece(move);
+
+    // Captures and en passant
+    if (capturedPiece) {
+      const captureSq = isEnPassant ?
+        (dst + (this.isWhiteToMove ? 8 : -8)) :
+        dst;
+
+      // BitboardHelper.clearSquare(capturedPiece, this.isWhiteToMove, captureSq);
+      // BitboardHelper.clearSquare(7, this.isWhiteToMove, captureSq);
+      // pieceLists[!this.isWhiteToMove][capturedPiece & Piece.TYPE_MASK];
+
+      if (isEnPassant) {
+        this.#squares[captureSq] = 0;
+      };
+    };
+
+    // Castling
+    if ((movedPiece & Piece.TYPE_MASK) === Piece.KING) {
+      this.castlingRights &= this.isWhiteToMove ? ~(Board.WHITE_KINGSIDE | Board.WHITE_QUEENSIDE) : ~(Board.BLACK_KINGSIDE | Board.BLACK_QUEENSIDE); // deprive castling rights
+
+      if ((move & Move.FLAG_MASK) === Move.CASTLE_FLAG << 12) {
+        const kingside = dst === 6 || dst === 62; // if target square is g1 or g8
+        const castlingRookFromIndex = kingside ? dst + 1 : dst - 2;
+        const castlingRookToIndex = kingside ? dst - 1 : dst + 1;
+
+        // Update rook position
+        // BitboardHelper.movePiece(capturedPiece, castlingRookFromIndex, castlingRookToIndex);
+        // BitboardHelper.movePiece(7, castlingRookFromIndex, castlingRookToIndex);
+        // pieceLists[!this.isWhiteToMove][Piece.ROOK];
+        this.#squares[castlingRookFromIndex] = 0;
+        this.#squares[castlingRookToIndex] = Piece.ROOK | (this.isWhiteToMove ? Piece.WHITE : Piece.BLACK);
+      };
+    };
+
+    // Promotion
+    if (Move.isPromotion(move)) {
+      const promotionPieceType = Move.getPromotionPieceType(move);
+
+      // Remove pawn from promotion square and add promoted piece instead
+      // BitboardHelper.clearSquare(movedPiece, dst);
+      // BitboardHelper.setSquare(promotionPieceType, dst);
+      // pieceLists[!this.isWhiteToMove][Piece.PAWN];
+      // pieceLists[!this.isWhiteToMove][promotionPieceType];
+    };
+
+    // Pawn has moved two sqaures forward, mark file with en-passant flag
+    if (((move & Move.FLAG_MASK) === Move.PAWN_DOUBLE_PUSH_FLAG) && ((movedPiece & Piece.TYPE_MASK) === Piece.PAWN)) {
+      this.enPassantFile = src >> 3;
+    } else {
+      this.enPassantFile = null;
+    };
+
+    // Update castling rights
+    // Any piece moving to/from rook square removes castling right for that side
+    if (this.castlingRights) {
+      if (dst === 63 || src === 63) {
+        this.castlingRights &= ~Board.WHITE_KINGSIDE;
+      } else if (dst === 56 || src === 56) {
+        this.castlingRights &= ~Board.WHITE_QUEENSIDE;
+      };
+      if (dst === 7 || src === 7) {
+        this.castlingRights &= ~Board.BLACK_KINGSIDE;
+      } else if (dst === 0 || src === 0) {
+        this.castlingRights &= ~Board.BLACK_QUEENSIDE;
+      };
+    };
+
+    // Change side to move
+    this.isWhiteToMove = !this.isWhiteToMove;
+    this.plyCount++;
+
+    /*
+    const newFiftyMoveCounter = this.fiftyMoveCounter + 1;
+    // Pawn moves and captures reset the fifty move counter and clear 3-fold repetition history
+    if (movedPiece === Piece.PAWN || capturedPiece) {
+      newFiftyMoveCounter = 0;
+    };
+    */
+
     // this.#invalidate();
     this.makeMoveCanvas(move);
   };
@@ -548,9 +651,6 @@ let Board = class {
       this.#ctx.drawImage(sprite, (index & 7) * 100, (index >> 3) * 100, 100, 100);
     };
   };
-  whitePiecesBitboard;
-  blackPiecesBitboard;
-  allPiecesBitboard;
   visualizeBitboard;
 };
 
@@ -621,14 +721,14 @@ let Move = class {
     return (n & this.TARGET_SQ_MASK) >> 6;
   };
   static isPromotion(n) {
-    return (n & this.FLAG_MASK) >= this.PROMOTE_TO_QUEEN_FLAG;
+    return (n & this.FLAG_MASK) >= this.PROMOTE_TO_QUEEN_FLAG << 12;
   };
   static isEnPassant(n) {
-    return (n & this.FLAG_MASK) === this.EN_PASSANT_FLAG;
+    return (n & this.FLAG_MASK) === this.EN_PASSANT_FLAG << 12;
   };
   nullMove = new Move(0);
   static getPromotionPieceType(n) {
-    switch (n & this.FLAG_MASK) {
+    switch ((n & this.FLAG_MASK) >> 12) {
       case this.PROMOTE_TO_ROOK_FLAG:
         return Piece.ROOK;
       case this.PROMOTE_TO_KNIGHT_FLAG:
@@ -657,10 +757,12 @@ let Move = class {
         move |= 0x2000;
       };
 
+      /*
       // pawn double push flag
       if ((move & 0x608) === 0x608 || (move & 0x830) === 0x830) {
         move |= 0x3000;
       };
+      */
 
       switch (chunk.charCodeAt(4)) { // promotion flag
         case 113: // queen
@@ -699,10 +801,12 @@ let Move = class {
         move |= 0x2000;
       };
 
+      /*
       // pawn double push flag
       if ((move & 0x608) === 0x608 || (move & 0x830) === 0x830) {
         move |= 0x3000;
       };
+      */
 
       switch (chunk.charCodeAt(4)) { // promotion flag
         case 113: // queen
