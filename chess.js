@@ -20,6 +20,17 @@ if (typeof Uint8Array.prototype.toBase64 !== "function") {
   };
 };
 
+Array.prototype.updateOrDrop = function (target, newValue) {
+  const index = this.indexOf(target);
+  if (index === -1) return; // If no match, do nothing
+
+  if (newValue === null || newValue === undefined) {
+    this.splice(index, 1);
+  } else {
+    this[index] = newValue;
+  };
+};
+
 let ChessSprites = {};
 let ChessSpritesImageBitmap = {};
 const ChessSpritesMap = ["wK", "wQ", "wB", "wN", "wR", "wP", "bK", "bQ", "bB", "bN", "bR", "bP"];
@@ -85,6 +96,7 @@ let Board = class {
 
   isWhiteToMove;
   plyCount = 0;
+  fiftyMoveCounter = 0;
   moves = [];
   enPassantFile = null;
 
@@ -98,8 +110,8 @@ let Board = class {
   // Store all lists in a 2D array: [colorIndex][pieceType]
   // colorIndex 0 = White, 1 = Black
   #pieceLists = [
-    [[], [], [], [], [], [], []], // White (Indices 0-6)
-    [[], [], [], [], [], [], []]  // Black (Indices 0-6)
+    [[], [], [], [], [], [], [], []], // White (Indices 0-7)
+    [[], [], [], [], [], [], [], []]  // Black (Indices 0-7)
   ];
   #allPieceLists = [[], []]; // [colorIndex] -> All occupied squares for that color
 
@@ -116,7 +128,6 @@ let Board = class {
 
   constructor() {
     this.#ctx = this.#cnv.getContext("2d");
-    //this.allPiecesBitboard = new Uint32Array(2); // Needs to be declared once more?
   };
 
   redrawCanvas(sprites = ChessSpritesImageBitmap) {
@@ -207,7 +218,7 @@ let Board = class {
       "p": Piece.PAWN
     };
 
-    const [board, moveSide, castlingRights, epTarget, , plyCount] = fen.split(" ");
+    const [board, moveSide, castlingRights, epTarget, fiftyMoveCounter, plyCount] = fen.split(" ");
     let file = 0, rank = 0;
     for (let symbol of board) {
       if (symbol === "/") {
@@ -278,6 +289,8 @@ let Board = class {
       // 4. Success: Store the file index (0-7)
       this.enPassantFile = fileChar.charCodeAt(0) - 97;
     };
+
+    this.fiftyMoveCounter = parseInt(fiftyMoveCounter);
 
     this.plyCount = (parseInt(plyCount) - 1 << 1) + !this.isWhiteToMove;
 
@@ -365,7 +378,7 @@ let Board = class {
       epTarget = String.fromCharCode(this.enPassantFile + 97) + (this.isWhiteToMove ? 6 : 3);
     };
 
-    return `${output} ${this.isWhiteToMove ? "w" : "b"} ${castlingRights} ${epTarget} 0 ${(this.plyCount >> 1) + 1}`;
+    return `${output} ${this.isWhiteToMove ? "w" : "b"} ${castlingRights} ${epTarget} ${this.fiftyMoveCounter} ${(this.plyCount >> 1) + 1}`;
   };
   toBase64String() {
     let arr = new Uint8Array(32);
@@ -513,6 +526,7 @@ let Board = class {
   };
   makeMoveCanvas(move, sprites = ChessSpritesImageBitmap) {
     const src = Move.getStartSq(move), dst = Move.getTargetSq(move);
+    const movedPiece = this.#squares[dst ^ 56];
 
     // Update the canvas
     const labels = [" ", "wK", "wQ", "wR", "wN", "wB", "wP", " ", " ", "bK", "bQ", "bR", "bN", "bB", "bP", " "];
@@ -522,27 +536,59 @@ let Board = class {
     // Destination square
     this.#ctx.fillStyle = ((dst ^ (dst >> 3)) & 1) ? this.cnvLightColor : this.cnvDarkColor;
     this.#ctx.fillRect((dst & 7) * 100, (dst >> 3 ^ 7) * 100, 100, 100);
-    const sprite = sprites[labels[this.#squares[dst ^ 56] - 8]];
+    let sprite = sprites[labels[movedPiece - 8]];
+    // Handle promotion, not needed?
+    /*
+    if (Move.isPromotion(move)) {
+      const promotionPieceType = Move.getPromotionPieceType(move);
+      sprite = sprites[labels[promotionPieceType - 8]];
+    };
+    */
     if (sprite) {
       this.#ctx.drawImage(sprite, (dst & 7) * 100, (dst >> 3 ^ 7) * 100, 100, 100);
+    };
+
+    // En passant, clear the captured pawn
+    const isEnPassant = Move.isEnPassant(move) && ((movedPiece & Piece.TYPE_MASK) === Piece.PAWN);
+    if (isEnPassant) {
+      const captureSq = (isEnPassant ?
+        (dst + (this.isWhiteToMove ? 8 : -8)) : // this.isWhiteToMove is flipped before calling makeMoveCanvas()
+        dst) ^ 56;
+      this.#ctx.fillStyle = ((captureSq ^ (captureSq >> 3)) & 1) ? this.cnvDarkColor : this.cnvLightColor;
+      this.#ctx.fillRect((captureSq & 7) * 100, (captureSq >> 3) * 100, 100, 100);
+    };
+
+    // Move the rook for castling
+    if (((move & Move.FLAG_MASK) === Move.CASTLE_FLAG << 12) && ((movedPiece & Piece.TYPE_MASK) === Piece.KING)) {
+      const kingside = dst === 6 || dst === 62; // if target square is g1 or g8
+      const castlingRookFromIndex = dst + (kingside ? 1 : -2);
+      const castlingRookToIndex = dst + (kingside ? -1 : 1);
+
+      // Source square
+      this.#ctx.fillStyle = ((castlingRookFromIndex ^ (castlingRookFromIndex >> 3)) & 1) ? this.cnvLightColor : this.cnvDarkColor;
+      this.#ctx.fillRect((castlingRookFromIndex & 7) * 100, (castlingRookFromIndex >> 3 ^ 7) * 100, 100, 100);
+      // Destination square
+      this.#ctx.fillStyle = ((castlingRookToIndex ^ (castlingRookToIndex >> 3)) & 1) ? this.cnvLightColor : this.cnvDarkColor;
+      this.#ctx.fillRect((castlingRookToIndex & 7) * 100, (castlingRookToIndex >> 3 ^ 7) * 100, 100, 100);
+      this.#ctx.drawImage(sprites[this.isWhiteToMove ? "bR" : "wR"], (castlingRookToIndex & 7) * 100, (castlingRookToIndex >> 3 ^ 7) * 100, 100, 100); // this.isWhiteToMove is flipped before calling makeMoveCanvas()
     };
 
     this.#isDirty = false;
   };
   #movePiece(move) {
-    const src = Move.getStartSq(move) ^ 56, dst = Move.getTargetSq(move) ^ 56, colorIdx = !this.isWhiteToMove, piece = this.#squares[src];
+    const src = Move.getStartSq(move) ^ 56, dst = Move.getTargetSq(move) ^ 56, colorIdx = Number(!this.isWhiteToMove), piece = this.#squares[src];
 
     // BitboardHelper.movePiece(this.getPieceBitboard(piece, colorIdx), src, dst);
     // BitboardHelper.movePiece(this.getPieceBitboard(7, colorIdx), src, dst);
     // BitboardHelper.movePiece(allPiecesBitboard, src, dst);
 
-    // pieceLists[colorIdx][piece & Piece.TYPE_MASK];
+    this.#pieceLists[colorIdx][piece & Piece.TYPE_MASK].updateOrDrop(src, dst);
+    this.#allPieceLists[colorIdx].updateOrDrop(src, dst);
     this.#squares[dst] = piece;
     this.#squares[src] = Piece.NONE;
-    
   };
   makeMove(move) {
-    const src = Move.getStartSq(move) ^ 56, dst = Move.getTargetSq(move) ^ 56;
+    const src = Move.getStartSq(move) ^ 56, dst = Move.getTargetSq(move) ^ 56, colorIdx = Number(!this.isWhiteToMove), enemyPawn = this.isWhiteToMove ? 22 : 14;
     const movedPiece = this.#squares[src];
     const isEnPassant = Move.isEnPassant(move) && ((movedPiece & Piece.TYPE_MASK) === Piece.PAWN);
     const capturedPiece = isEnPassant ? (this.isWhiteToMove ? 22 : 14) : this.#squares[dst];
@@ -551,13 +597,19 @@ let Board = class {
 
     // Captures and en passant
     if (capturedPiece) {
+      // If there's no enemy pawn at the en passant target sqaure, it's not an en passant
+      if (isEnPassant && (this.#squares[dst + (this.isWhiteToMove ? 8 : -8)] !== enemyPawn)) {
+        isEnPassant = false;
+      };
+
       const captureSq = isEnPassant ?
         (dst + (this.isWhiteToMove ? 8 : -8)) :
         dst;
 
       // BitboardHelper.clearSquare(capturedPiece, this.isWhiteToMove, captureSq);
       // BitboardHelper.clearSquare(7, this.isWhiteToMove, captureSq);
-      // pieceLists[!this.isWhiteToMove][capturedPiece & Piece.TYPE_MASK];
+      this.#pieceLists[colorIdx][capturedPiece & Piece.TYPE_MASK].updateOrDrop(captureSq);
+      this.#allPieceLists[colorIdx].updateOrDrop(captureSq);
 
       if (isEnPassant) {
         this.#squares[captureSq] = 0;
@@ -570,13 +622,14 @@ let Board = class {
 
       if ((move & Move.FLAG_MASK) === Move.CASTLE_FLAG << 12) {
         const kingside = dst === 6 || dst === 62; // if target square is g1 or g8
-        const castlingRookFromIndex = kingside ? dst + 1 : dst - 2;
-        const castlingRookToIndex = kingside ? dst - 1 : dst + 1;
+        const castlingRookFromIndex = dst + (kingside ? 1 : -2);
+        const castlingRookToIndex = dst + (kingside ? -1 : 1);
 
         // Update rook position
         // BitboardHelper.movePiece(capturedPiece, castlingRookFromIndex, castlingRookToIndex);
         // BitboardHelper.movePiece(7, castlingRookFromIndex, castlingRookToIndex);
-        // pieceLists[!this.isWhiteToMove][Piece.ROOK];
+        this.#pieceLists[colorIdx][Piece.ROOK].updateOrDrop(castlingRookFromIndex, castlingRookToIndex);
+        this.#allPieceLists[colorIdx].updateOrDrop(castlingRookFromIndex, castlingRookToIndex);
         this.#squares[castlingRookFromIndex] = 0;
         this.#squares[castlingRookToIndex] = Piece.ROOK | (this.isWhiteToMove ? Piece.WHITE : Piece.BLACK);
       };
@@ -589,13 +642,17 @@ let Board = class {
       // Remove pawn from promotion square and add promoted piece instead
       // BitboardHelper.clearSquare(movedPiece, dst);
       // BitboardHelper.setSquare(promotionPieceType, dst);
-      // pieceLists[!this.isWhiteToMove][Piece.PAWN];
-      // pieceLists[!this.isWhiteToMove][promotionPieceType];
+      this.#pieceLists[colorIdx][Piece.PAWN].updateOrDrop(dst);
+      this.#pieceLists[colorIdx][promotionPieceType].push(dst);
     };
 
     // Pawn has moved two sqaures forward, mark file with en-passant flag
-    if (((move & Move.FLAG_MASK) === Move.PAWN_DOUBLE_PUSH_FLAG) && ((movedPiece & Piece.TYPE_MASK) === Piece.PAWN)) {
-      this.enPassantFile = src >> 3;
+    if (
+      ((move & Move.FLAG_MASK) === Move.PAWN_DOUBLE_PUSH_FLAG << 12) &&
+      ((movedPiece & Piece.TYPE_MASK) === Piece.PAWN) &&
+      ((this.#squares[dst - 1] === enemyPawn) || (this.#squares[dst + 1] === enemyPawn)) // Also check if there's an enemy pawn next to it
+    ) {
+      this.enPassantFile = src & 7;
     } else {
       this.enPassantFile = null;
     };
@@ -619,15 +676,13 @@ let Board = class {
     this.isWhiteToMove = !this.isWhiteToMove;
     this.plyCount++;
 
-    /*
-    const newFiftyMoveCounter = this.fiftyMoveCounter + 1;
+    let newFiftyMoveCounter = this.fiftyMoveCounter + 1;
     // Pawn moves and captures reset the fifty move counter and clear 3-fold repetition history
     if (movedPiece === Piece.PAWN || capturedPiece) {
       newFiftyMoveCounter = 0;
     };
-    */
+    this.fiftyMoveCounter = newFiftyMoveCounter;
 
-    // this.#invalidate();
     this.makeMoveCanvas(move);
   };
   undoMove(move) {
@@ -753,16 +808,16 @@ let Move = class {
       let move = algebraicToSqNumber(squares[0]) | algebraicToSqNumber(squares[1]) << 6;
 
       // castle flag
-      if (move === 132 || move === 388 || move === 3772 || move === 4028) {
+      const m = move & ~0x100;
+      if (m === 132 || m === 3772) { // move === 132 || move === 388 || move === 3772 || move === 4028
         move |= 0x2000;
       };
 
-      /*
       // pawn double push flag
-      if ((move & 0x608) === 0x608 || (move & 0x830) === 0x830) {
+      const files = move & 0xe38;
+      if (files === 0x608 || files === 0x830) {
         move |= 0x3000;
       };
-      */
 
       switch (chunk.charCodeAt(4)) { // promotion flag
         case 113: // queen
@@ -797,17 +852,32 @@ let Move = class {
       let move = base64char.indexOf(chunk[0]) | base64char.indexOf(chunk[1]) << 6;
 
       // castle flag
-      if (move === 132 || move === 388 || move === 3772 || move === 4028) {
+      const m = move & ~0x100;
+      if (m === 132 || m === 3772) { // move === 132 || move === 388 || move === 3772 || move === 4028
         move |= 0x2000;
       };
 
-      /*
       // pawn double push flag
-      if ((move & 0x608) === 0x608 || (move & 0x830) === 0x830) {
+      const files = move & 0xe38;
+      if (files === 0x608 || files === 0x830) {
         move |= 0x3000;
       };
-      */
 
+      // en passant
+      const src = move & 63, dst = (move & 4032) >> 6, diff = dst - src, srcRank = src >> 3;
+      if (srcRank === 3 || srcRank === 4) {
+        const absDiff = diff < 0 ? -diff : diff;
+        // 1. Check if the distance is diagonal (7 or 9)
+        // 2. Check if the direction matches the rank (Rank 3 moves -; Rank 4 moves +)
+        // 3. Ensure file distance is 1 using XOR to check if file bits changed
+        if ((absDiff === 7 || absDiff === 9) && 
+          (diff > 0) === (srcRank === 4) && 
+          Math.abs((src & 7) - (dst & 7)) === 1) {
+          move |= 0x1000;
+        };
+      };
+
+      /*
       switch (chunk.charCodeAt(4)) { // promotion flag
         case 113: // queen
         case 81:
@@ -826,6 +896,7 @@ let Move = class {
           move |= 0x7000;
           break;
       };
+      */
 
       moves.push(move);
     };

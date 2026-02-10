@@ -121,6 +121,9 @@ body {
       <div class="color-scheme-preset" data-light="#dfe2e7" data-dark="#8ca0af">
         <span class="color-box" style="background-color: #dfe2e7;">　</span><span class="color-box" style="background-color: #8ca0af;">　</span>
       </div>
+      <div class="color-scheme-preset" data-light="#ece7ff" data-dark="#9c71af">
+        <span class="color-box" style="background-color: #ece7ff;">　</span><span class="color-box" style="background-color: #9c71af;">　</span>
+      </div>
       <div class="color-scheme-preset" data-light="#484073" data-dark="#170a2f">
         <span class="color-box" style="background-color: #484073;">　</span><span class="color-box" style="background-color: #170a2f;">　</span>
       </div>
@@ -361,12 +364,12 @@ document.getElementById("erase-piece").addEventListener("click", (ev) => {
 });
 
 document.getElementById("restore-startpos").addEventListener("click", () => {
-  document.getElementById("textbox-b64pos").value = "vNqdy+7u7u4AAAAAAAAAAAAAAAAAAAAAZmZmZjRSFUM";
+  document.getElementById("textbox-b64pos").value = "vNqdy+7u7u4AAAAAAAAAAAAAAAAAAAAAZmZmZjRSFUM:eAAA";
   document.getElementById("btn-import-b64pos").click();
 });
 
 document.getElementById("empty-board").addEventListener("click", () => {
-  document.getElementById("textbox-b64pos").value = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+  document.getElementById("textbox-b64pos").value = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA:eAAA";
   document.getElementById("btn-import-b64pos").click();
 });
 
