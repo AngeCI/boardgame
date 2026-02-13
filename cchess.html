@@ -110,6 +110,25 @@ body {
     </div>
     <hr />
     <div>
+      <label for="textbox-fen">FEN string of initial position:</label>
+      <input type="text" id="textbox-fen-initial" value="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" />
+      <div class="popup" style="display: inline;">
+        <button id="fen-initial-copy-btn">Copy FEN string</button>
+        <span class="popuptext-below" id="fen-initial-copy-popup">String copied</span>
+      </div>
+      <button id="btn-import-fen-initial">Load FEN string</button>
+    </div>
+    <div>
+      <label for="textbox-b64pos-initial">Custom base64 initial position format:</label>
+      <input type="text" id="textbox-b64pos-initial" />
+      <div class="popup" style="display: inline;">
+        <button id="b64pos-initial-copy-btn">Copy base64 position</button>
+        <span class="popuptext-below" id="b64pos-initial-copy-popup">String copied</span>
+      </div>
+      <button id="btn-import-b64pos-initial">Load base64 position</button>
+    </div>
+    <hr />
+    <div>
       <label for="textbox-fen">FEN string of current position:</label>
       <input type="text" id="textbox-fen" value="rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR w - - 0 1" />
       <div class="popup" style="display: inline;">
@@ -335,6 +354,36 @@ document.getElementById("rotate-board").addEventListener("input", (ev) => {
   board.drawBoard(boardEl, boardRotated);
 });
 
+document.getElementById("fen-initial-copy-btn").addEventListener("click", async () => {
+  await navigator.clipboard.writeText(document.getElementById("textbox-fen-initial").value);
+  document.getElementById("fen-initial-copy-popup").classList.toggle("show");
+  setTimeout(() => {
+    document.getElementById("fen-initial-copy-popup").classList.toggle("show");
+  }, 5000);
+});
+
+document.getElementById("btn-import-fen-initial").addEventListener("click", () => {
+  board.importFromFen(document.getElementById("textbox-fen-initial").value);
+  document.getElementById("textbox-b64pos-initial").value = board.toBase64String();
+  board.drawBoard(boardEl, boardRotated);
+  board.fillGameStates();
+});
+
+document.getElementById("b64pos-initial-copy-btn").addEventListener("click", async () => {
+  await navigator.clipboard.writeText(document.getElementById("textbox-b64pos-initial").value);
+  document.getElementById("b64pos-initial-copy-popup").classList.toggle("show");
+  setTimeout(() => {
+    document.getElementById("b64pos-initial-copy-popup").classList.toggle("show");
+  }, 5000);
+});
+
+document.getElementById("btn-import-b64pos-initial").addEventListener("click", () => {
+  board.importFromBase64(document.getElementById("textbox-b64pos-initial").value);
+  document.getElementById("textbox-fen-initial").value = board.getFENString();
+  board.drawBoard(boardEl, boardRotated);
+  board.fillGameStates();
+});
+
 document.getElementById("fen-copy-btn").addEventListener("click", async () => {
   await navigator.clipboard.writeText(document.getElementById("textbox-fen").value);
   document.getElementById("fen-copy-popup").classList.toggle("show");
@@ -424,6 +473,12 @@ document.getElementById("red-to-move").addEventListener("input", () => {
       document.getElementById("textbox-b64pos").value = board.toBase64String();
     };
 });
+
+(async () => {
+  await sleep(400);
+  board.bmpSprites = CChessSpritesImageBitmap;
+  board.vectorSprites = CChessSprites;
+})();
 
 const params = new URL(location.href).searchParams;
 

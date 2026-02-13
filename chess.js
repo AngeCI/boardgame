@@ -93,7 +93,10 @@ let Board = class {
 
   cnvLightColor = "#f1d9c0";
   cnvDarkColor = "#a97a65";
+  bmpSprites;
+  vectorSprites;
 
+  initialPos = new Uint8Array(64);
   isWhiteToMove;
   plyCount = 0;
   fiftyMoveCounter = 0;
@@ -130,7 +133,7 @@ let Board = class {
     this.#ctx = this.#cnv.getContext("2d");
   };
 
-  redrawCanvas(sprites = ChessSpritesImageBitmap) {
+  redrawCanvas() {
     const labels = [" ", "wK", "wQ", "wR", "wN", "wB", "wP", " ", " ", "bK", "bQ", "bR", "bN", "bB", "bP", " "];
     let pieceNum;
 
@@ -140,7 +143,7 @@ let Board = class {
         this.#ctx.fillRect(x * 100, y * 100, 100, 100);
 
         pieceNum = this.#squares[(y << 3) + x] - 8;
-        let sprite = sprites[labels[pieceNum]];
+        let sprite = this.bmpSprites[labels[pieceNum]];
         if (sprite) {
           this.#ctx.drawImage(sprite, x * 100, y * 100, 100, 100);
         };
@@ -441,7 +444,7 @@ let Board = class {
       throw new TypeError("Invalid piece type.");
     };
   };
-  drawBoard(boardEl, rotated = false, sprites = ChessSprites) {
+  drawBoard(boardEl, rotated = false) {
     const labels = [" ", "wK", "wQ", "wR", "wN", "wB", "wP", " ", " ", "bK", "bQ", "bR", "bN", "bB", "bP", " "];
     const boardRows = boardEl.children;
     let boardGrids, pieceNum;
@@ -451,7 +454,7 @@ let Board = class {
       for (let j = 0; j < 8; j++) {
         boardGrids[j].innerHTML = "";
         pieceNum = this.#squares[rotated ? ((i << 3) + j ^ 63) : ((i << 3) + j)] - 8;
-        let sprite = sprites[labels[pieceNum]];
+        let sprite = this.vectorSprites[labels[pieceNum]];
         if (sprite) {
           boardGrids[j].appendChild(sprite.cloneNode(true));
         };
@@ -507,7 +510,7 @@ let Board = class {
 
     return output.join("");
   };
-  displayMove(move, boardEl, rotated = false, sprites = ChessSprites) {
+  displayMove(move, boardEl, rotated = false) {
     const src = Move.getStartSq(move), dst = Move.getTargetSq(move);
 
     const srcDOM = boardEl.querySelector(`[data-index="${rotated ? src ^ 7 : src ^ 56}"]`);
@@ -519,12 +522,12 @@ let Board = class {
     srcDOM.innerHTML = "";
 
     const labels = [" ", "wK", "wQ", "wR", "wN", "wB", "wP", " ", " ", "bK", "bQ", "bR", "bN", "bB", "bP", " "];
-    let sprite = sprites[labels[this.#squares[dst ^ 56] - 8]];
+    let sprite = this.vectorSprites[labels[this.#squares[dst ^ 56] - 8]];
     if (sprite) {
       dstDOM.appendChild(sprite.cloneNode(true));
     };
   };
-  makeMoveCanvas(move, sprites = ChessSpritesImageBitmap) {
+  makeMoveCanvas(move) {
     const src = Move.getStartSq(move), dst = Move.getTargetSq(move);
     const movedPiece = this.#squares[dst ^ 56];
 
@@ -536,12 +539,12 @@ let Board = class {
     // Destination square
     this.#ctx.fillStyle = ((dst ^ (dst >> 3)) & 1) ? this.cnvLightColor : this.cnvDarkColor;
     this.#ctx.fillRect((dst & 7) * 100, (dst >> 3 ^ 7) * 100, 100, 100);
-    let sprite = sprites[labels[movedPiece - 8]];
+    let sprite = this.bmpSprites[labels[movedPiece - 8]];
     // Handle promotion, not needed?
     /*
     if (Move.isPromotion(move)) {
       const promotionPieceType = Move.getPromotionPieceType(move);
-      sprite = sprites[labels[promotionPieceType - 8]];
+      sprite = this.bmpSprites[labels[promotionPieceType - 8]];
     };
     */
     if (sprite) {
@@ -570,7 +573,7 @@ let Board = class {
       // Destination square
       this.#ctx.fillStyle = ((castlingRookToIndex ^ (castlingRookToIndex >> 3)) & 1) ? this.cnvLightColor : this.cnvDarkColor;
       this.#ctx.fillRect((castlingRookToIndex & 7) * 100, (castlingRookToIndex >> 3 ^ 7) * 100, 100, 100);
-      this.#ctx.drawImage(sprites[this.isWhiteToMove ? "bR" : "wR"], (castlingRookToIndex & 7) * 100, (castlingRookToIndex >> 3 ^ 7) * 100, 100, 100); // this.isWhiteToMove is flipped before calling makeMoveCanvas()
+      this.#ctx.drawImage(this.bmpSprites[this.isWhiteToMove ? "bR" : "wR"], (castlingRookToIndex & 7) * 100, (castlingRookToIndex >> 3 ^ 7) * 100, 100, 100); // this.isWhiteToMove is flipped before calling makeMoveCanvas()
     };
 
     this.#isDirty = false;
@@ -694,14 +697,14 @@ let Board = class {
   hasQueensideCastleRight(isWhite) {
     return (this.castlingRights & (isWhite ? 2 : 8)) !== 0;
   };
-  setPiece(index, newPiece, sprites = ChessSpritesImageBitmap) {
+  setPiece(index, newPiece) {
     this.#squares[index] = newPiece;
 
     // Update the canvas
     const labels = [" ", "wK", "wQ", "wR", "wN", "wB", "wP", " ", " ", "bK", "bQ", "bR", "bN", "bB", "bP", " "];
     this.#ctx.fillStyle = ((index ^ (index >> 3)) & 1) ? this.cnvDarkColor : this.cnvLightColor;
     this.#ctx.fillRect((index & 7) * 100, (index >> 3) * 100, 100, 100);
-    const sprite = sprites[labels[newPiece - 8]];
+    const sprite = this.bmpSprites[labels[newPiece - 8]];
     if (sprite) {
       this.#ctx.drawImage(sprite, (index & 7) * 100, (index >> 3) * 100, 100, 100);
     };

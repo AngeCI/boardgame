@@ -72,6 +72,10 @@ let Board = class {
   #FILE_LEFT = 3;
   #FILE_RIGHT = 11;
 
+  bmpSprites;
+  vectorSprites;
+
+  initialPos = new Uint8Array(256);
   isRedToMove;
   plyCount = 0;
   moves = [];
@@ -96,7 +100,7 @@ let Board = class {
     this.#ctx = this.#cnv.getContext("2d");
   };
 
-  redrawCanvas(sprites = CChessSpritesImageBitmap) {
+  redrawCanvas() {
     const labels = [" ", "rK", "rA", "rB", "rN", "rR", "rC", "rP", " ", "bK", "bA", "bB", "bN", "bR", "bC", "bP"];
     let pieceNum;
 
@@ -105,7 +109,7 @@ let Board = class {
     for (let y = this.#RANK_TOP; y < this.#RANK_BOTTOM + 1; y++) {
       for (let x = this.#FILE_LEFT; x < this.#FILE_RIGHT + 1; x++) {
         pieceNum = this.#squares[(y << 4) + x] - 8;
-        let sprite = sprites[labels[pieceNum]];
+        let sprite = this.bmpSprites[labels[pieceNum]];
         if (sprite) {
           this.#ctx.drawImage(sprite, (x - 3) * 100, (y - 2) * 100, 100, 100);
         };
@@ -304,7 +308,7 @@ let Board = class {
     // Todo
   };
   */
-  drawBoard(boardEl, rotated = false, sprites = CChessSprites) {
+  drawBoard(boardEl, rotated = false) {
     const labels = [" ", "rK", "rA", "rB", "rN", "rR", "rC", "rP", " ", "bK", "bA", "bB", "bN", "bR", "bC", "bP"];
     const boardRows = boardEl.children;
     let boardGrids, pieceNum;
@@ -314,7 +318,7 @@ let Board = class {
       for (let j = 0; j < 9; j++) {
         boardGrids[j].innerHTML = "";
         pieceNum = this.#squares[rotated ? this.convert90to256(89 - i * 9 - j) : this.convert90to256(i * 9 + j)] - 8;
-        let sprite = sprites[labels[pieceNum]];
+        let sprite = this.vectorSprites[labels[pieceNum]];
         if (sprite) {
           boardGrids[j].appendChild(sprite.cloneNode(true));
         };
@@ -370,7 +374,7 @@ let Board = class {
 
     return output.join("");
   };
-  displayMove(move, boardEl, rotated = false, sprites = CChessSprites) {
+  displayMove(move, boardEl, rotated = false) {
     const src = Move.getStartSq(move), dst = Move.getTargetSq(move);
 
     const srcDOM = boardEl.querySelector(`[data-index="${rotated ? src : 89 - src}"]`);
@@ -382,12 +386,12 @@ let Board = class {
     srcDOM.innerHTML = "";
 
     const labels = [" ", "rK", "rA", "rB", "rN", "rR", "rC", "rP", " ", "bK", "bA", "bB", "bN", "bR", "bC", "bP"];
-    let sprite = sprites[labels[this.#squares[dst ^ 56] - 8]];
+    let sprite = this.vectorSprites[labels[this.#squares[dst ^ 56] - 8]];
     if (sprite) {
       dstDOM.appendChild(sprite.cloneNode(true));
     };
   };
-  makeMoveCanvas(move, sprites = CChessSpritesImageBitmap) {
+  makeMoveCanvas(move) {
     const src = Move.getStartSq(move), dst = Move.getTargetSq(move);
 
     // Update the canvas
@@ -397,7 +401,7 @@ let Board = class {
     this.#ctx.fillRect(((src * 7282 & 0xffff) * 9 >>> 16) * 100, (src * 7282 >>> 16) * 100, 100, 100);
     // Destination square
     this.#ctx.fillRect(((dst * 7282 & 0xffff) * 9 >>> 16) * 100, (dst * 7282 >>> 16) * 100, 100, 100);
-    const sprite = sprites[labels[this.#squares[dst] - 8]];
+    const sprite = this.bmpSprites[labels[this.#squares[dst] - 8]];
     if (sprite) {
       this.#ctx.drawImage(sprite, ((dst * 7282 & 0xffff) * 9 >>> 16) * 100, (dst * 7282 >>> 16) * 100, 100, 100);
     };
