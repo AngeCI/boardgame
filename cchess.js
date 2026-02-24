@@ -78,7 +78,11 @@ let Board = class {
   initialPos = new Uint8Array(256);
   isRedToMove;
   plyCount = 0;
+  fiftyMoveCounter = 0;
   moves = [];
+
+  zobristKey = new Uint32Array(2);
+  repetitionHistory = [];
 
   // Piece lists
   // Store all lists in a 2D array: [colorIndex][pieceType]
@@ -100,6 +104,79 @@ let Board = class {
     this.#ctx = this.#cnv.getContext("2d");
   };
 
+  /*
+  getLegalMoves() {
+    // Todo
+  };
+  getPieceMoves(square) {
+	const piece = this.#squares[square];
+	let moves = [];
+
+	if (this.isRedToMove ^ ((piece >> 3) - 1)) {
+      // Todo
+	};
+
+	return moves;
+  };
+  isInCheck() {
+    // Todo
+  };
+  isInCheckmate() {
+    // Todo
+  };
+  isInStalemate() {
+    // Todo
+  };
+  isRepeatedPosition() {
+    // Todo
+  };
+  isInsufficientMaterial() {
+    // Todo
+  };
+  isFiftyMoveDraw() {
+    // Todo
+  };
+  isDraw() {
+    // Todo
+  };
+  */
+  setPiece(index, newPiece) {
+    this.#squares[this.convert90to256(index)] = newPiece;
+    this.#invalidate();
+  };
+  getPiece(square) {
+    return this.#squares[square];
+  };
+  getPieceList(pieceType, color) {
+    this.#ensureUpToDate();
+    const colorIdx = (color >> 3) - 1; // 0 for Red (8), 1 for Black (16)
+    const list = this.#pieceLists[colorIdx]?.[pieceType];
+
+    if (!list) throw new TypeError("Invalid piece type or color.");
+    return list;
+  };
+  getAllPieceLists() {
+    this.#ensureUpToDate();
+    return {
+      "king": [this.#pieceLists[0][Piece.KING], this.#pieceLists[1][Piece.KING]],
+      "advisor": [this.#pieceLists[0][Piece.ADVISOR], this.#pieceLists[1][Piece.ADVISOR]],
+      "bishop": [this.#pieceLists[0][Piece.BISHOP], this.#pieceLists[1][Piece.BISHOP]],
+      "knight": [this.#pieceLists[0][Piece.KNIGHT], this.#pieceLists[1][Piece.KNIGHT]],
+      "rook": [this.#pieceLists[0][Piece.ROOK], this.#pieceLists[1][Piece.ROOK]],
+      "cannon": [this.#pieceLists[0][Piece.CANNON], this.#pieceLists[1][Piece.CANNON]],
+      "pawn": [this.#pieceLists[0][Piece.PAWN], this.#pieceLists[1][Piece.PAWN]],
+      "allPieces": this.#allPieceLists
+    };
+  };
+  /*
+  getPieceBitboard(type, isRed) {
+    this.#ensureUpToDate();
+    // Todo
+  };
+  */
+  getImage() {
+     return this.#cnv.convertToBlob();
+  };
   redrawCanvas() {
     const labels = [" ", "rK", "rA", "rB", "rN", "rR", "rC", "rP", " ", "bK", "bA", "bB", "bN", "bR", "bC", "bP"];
     let pieceNum;
@@ -278,36 +355,6 @@ let Board = class {
     };
     return arr.toBase64();
   };
-  getPiece(square) {
-    return this.#squares[square];
-  };
-  getPieceList(pieceType, color) {
-    this.#ensureUpToDate();
-    const colorIdx = (color >> 3) - 1; // 0 for Red (8), 1 for Black (16)
-    const list = this.#pieceLists[colorIdx]?.[pieceType];
-
-    if (!list) throw new TypeError("Invalid piece type or color.");
-    return list;
-  };
-  getAllPieceLists() {
-    this.#ensureUpToDate();
-    return {
-      "king": [this.#pieceLists[0][Piece.KING], this.#pieceLists[1][Piece.KING]],
-      "advisor": [this.#pieceLists[0][Piece.ADVISOR], this.#pieceLists[1][Piece.ADVISOR]],
-      "bishop": [this.#pieceLists[0][Piece.BISHOP], this.#pieceLists[1][Piece.BISHOP]],
-      "knight": [this.#pieceLists[0][Piece.KNIGHT], this.#pieceLists[1][Piece.KNIGHT]],
-      "rook": [this.#pieceLists[0][Piece.ROOK], this.#pieceLists[1][Piece.ROOK]],
-      "cannon": [this.#pieceLists[0][Piece.CANNON], this.#pieceLists[1][Piece.CANNON]],
-      "pawn": [this.#pieceLists[0][Piece.PAWN], this.#pieceLists[1][Piece.PAWN]],
-      "allPieces": this.#allPieceLists
-    };
-  };
-  /*
-  getPieceBitboard(type, isRed) {
-    this.#ensureUpToDate();
-    // Todo
-  };
-  */
   drawBoard(boardEl, rotated = false) {
     const labels = [" ", "rK", "rA", "rB", "rN", "rR", "rC", "rP", " ", "bK", "bA", "bB", "bN", "bR", "bC", "bP"];
     const boardRows = boardEl.children;
@@ -346,9 +393,6 @@ let Board = class {
         };
       };
     };
-  };
-  getImage() {
-     return this.#cnv.convertToBlob();
   };
   parseUCIMoves(str) {
     this.moves = Move.fromUCIString(str);
@@ -408,6 +452,11 @@ let Board = class {
 
     this.#isDirty = false;
   };
+  /*
+  #movePiece(move) {
+    // Todo
+  };
+  */
   makeMove(move) {
     const src = Move.getStartSq(move), dst = Move.getTargetSq(move);
     // Todo
@@ -421,10 +470,6 @@ let Board = class {
     // Todo
   };
   */
-  setPiece(index, newPiece) {
-    this.#squares[this.convert90to256(index)] = newPiece;
-    this.#invalidate();
-  };
 };
 
 let Piece = {

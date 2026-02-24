@@ -109,6 +109,9 @@ let Board = class {
   static BLACK_KINGSIDE  = 4; // 0100
   static BLACK_QUEENSIDE = 8; // 1000
 
+  zobristKey = new Uint32Array(2);
+  repetitionHistory = [];
+
   // Piece lists
   // Store all lists in a 2D array: [colorIndex][pieceType]
   // colorIndex 0 = White, 1 = Black
@@ -133,6 +136,125 @@ let Board = class {
     this.#ctx = this.#cnv.getContext("2d");
   };
 
+  getLegalMoves() {
+    let moves = [];
+    for (let sq = 0; sq < 64; sq++) {
+      const piece = this.#squares[sq];
+      if (this.isWhiteToMove !== (piece >= 16)) { // this.isWhiteToMove ^ ((piece >> 3) - 1)
+        move.push(...this.getPieceMoves(sq));
+      };
+    };
+  };
+  getPieceMoves(square) {
+    const piece = this.#squares[square];
+    let moves = [];
+
+    if (this.isWhiteToMove !== (piece >= 16)) { // this.isWhiteToMove ^ ((piece >> 3) - 1)
+      if (Piece.isSlidingPiece(piece)) {
+        MoveGenerator.genarateSlidingMoves(src, piece);
+      } else {
+        switch (piece & Piece.TYPE_MASK) {
+          case Piece.PAWN:
+            MoveGenerator.generateKnightMoves(src);
+            break;
+          case Piece.KNIGHT:
+            MoveGenerator.generatePawnMoves(src);
+            break;
+          case Piece.KING:
+            MoveGenerator.generateKingMoves(src);
+            break;
+        };
+      };
+    };
+
+    return moves;
+  };
+  isInCheck() {
+    return MoveGenerator.inCheck();
+  };
+  /*
+  isInCheckmate() {
+    // Todo
+  };
+  isInStalemate() {
+    // Todo
+  };
+  isRepeatedPosition() {
+    // Todo
+  };
+  isInsufficientMaterial() {
+    // Todo
+  };
+  isFiftyMoveDraw() {
+    // Todo
+  };
+  isDraw() {
+    // Todo
+  };
+  */
+  hasKingsideCastleRight(isWhite) {
+    return (this.castlingRights & (isWhite ? 1 : 4)) !== 0;
+  };
+  hasQueensideCastleRight(isWhite) {
+    return (this.castlingRights & (isWhite ? 2 : 8)) !== 0;
+  };
+  setPiece(index, newPiece) {
+    this.#squares[index] = newPiece;
+
+    // Update the canvas
+    const labels = [" ", "wK", "wQ", "wR", "wN", "wB", "wP", " ", " ", "bK", "bQ", "bR", "bN", "bB", "bP", " "];
+    this.#ctx.fillStyle = ((index ^ (index >> 3)) & 1) ? this.cnvDarkColor : this.cnvLightColor;
+    this.#ctx.fillRect((index & 7) * 100, (index >> 3) * 100, 100, 100);
+    const sprite = this.bmpSprites[labels[newPiece - 8]];
+    if (sprite) {
+      this.#ctx.drawImage(sprite, (index & 7) * 100, (index >> 3) * 100, 100, 100);
+    };
+  };
+  getPiece(square) {
+    return this.#squares[square];
+  };
+  getPieceList(pieceType, color) {
+    this.#ensureUpToDate();
+    const colorIdx = (color >> 3) - 1; // 0 for White (8), 1 for Black (16)
+    const list = this.#pieceLists[colorIdx]?.[pieceType];
+
+    if (!list) throw new TypeError("Invalid piece type or color.");
+    return list;
+  };
+  getAllPieceLists() {
+    this.#ensureUpToDate();
+    return {
+      "king": [this.#pieceLists[0][Piece.KING], this.#pieceLists[1][Piece.KING]],
+      "queen": [this.#pieceLists[0][Piece.QUEEN], this.#pieceLists[1][Piece.QUEEN]],
+      "rook": [this.#pieceLists[0][Piece.ROOK], this.#pieceLists[1][Piece.ROOK]],
+      "knight": [this.#pieceLists[0][Piece.KNIGHT], this.#pieceLists[1][Piece.KNIGHT]],
+      "bishop": [this.#pieceLists[0][Piece.BISHOP], this.#pieceLists[1][Piece.BISHOP]],
+      "pawn": [this.#pieceLists[0][Piece.PAWN], this.#pieceLists[1][Piece.PAWN]],
+      "allPieces": this.#allPieceLists
+    };
+  };
+  getPieceBitboard(type, isWhite) {
+    this.#ensureUpToDate();
+
+    if (type === 0) { // Empty pieces
+      return new Uint32Array([
+        ~this.allPiecesBitboard[0],
+        ~this.allPiecesBitboard[1]
+      ]);
+    } else if (type === 7) { // Assuming all pieces
+      const offset = !isWhite << 1;
+      return colourBitboards.subarray(offset, offset + 2);
+    } else if (type > 0 && type < 7) {
+      this.#ensureUpToDate();
+      const bbIdx = (!isWhite * 6 + type - 1) << 1;
+      return this.pieceBitboards.subarray(bbIdx, bbIdx + 2);
+    } else {
+      throw new TypeError("Invalid piece type.");
+    };
+  };
+  getImage() {
+     return this.#cnv.convertToBlob();
+  };
   redrawCanvas() {
     const labels = [" ", "wK", "wQ", "wR", "wN", "wB", "wP", " ", " ", "bK", "bQ", "bR", "bN", "bB", "bP", " "];
     let pieceNum;
@@ -402,48 +524,6 @@ let Board = class {
 
     return arr.toBase64().slice(0, -1) + ":" + gameState.toBase64(); // remove the trailing '='
   };
-  getPiece(square) {
-    return this.#squares[square];
-  };
-  getPieceList(pieceType, color) {
-    this.#ensureUpToDate();
-    const colorIdx = (color >> 3) - 1; // 0 for White (8), 1 for Black (16)
-    const list = this.#pieceLists[colorIdx]?.[pieceType];
-
-    if (!list) throw new TypeError("Invalid piece type or color.");
-    return list;
-  };
-  getAllPieceLists() {
-    this.#ensureUpToDate();
-    return {
-      "king": [this.#pieceLists[0][Piece.KING], this.#pieceLists[1][Piece.KING]],
-      "queen": [this.#pieceLists[0][Piece.QUEEN], this.#pieceLists[1][Piece.QUEEN]],
-      "rook": [this.#pieceLists[0][Piece.ROOK], this.#pieceLists[1][Piece.ROOK]],
-      "knight": [this.#pieceLists[0][Piece.KNIGHT], this.#pieceLists[1][Piece.KNIGHT]],
-      "bishop": [this.#pieceLists[0][Piece.BISHOP], this.#pieceLists[1][Piece.BISHOP]],
-      "pawn": [this.#pieceLists[0][Piece.PAWN], this.#pieceLists[1][Piece.PAWN]],
-      "allPieces": this.#allPieceLists
-    };
-  };
-  getPieceBitboard(type, isWhite) {
-    this.#ensureUpToDate();
-
-    if (type === 0) { // Empty pieces
-      return new Uint32Array([
-        ~this.allPiecesBitboard[0],
-        ~this.allPiecesBitboard[1]
-      ]);
-    } else if (type === 7) { // Assuming all pieces
-      const offset = !isWhite << 1;
-      return colourBitboards.subarray(offset, offset + 2);
-    } else if (type > 0 && type < 7) {
-      this.#ensureUpToDate();
-      const bbIdx = (!isWhite * 6 + type - 1) << 1;
-      return this.pieceBitboards.subarray(bbIdx, bbIdx + 2);
-    } else {
-      throw new TypeError("Invalid piece type.");
-    };
-  };
   drawBoard(boardEl, rotated = false) {
     const labels = [" ", "wK", "wQ", "wR", "wN", "wB", "wP", " ", " ", "bK", "bQ", "bR", "bN", "bB", "bP", " "];
     const boardRows = boardEl.children;
@@ -482,9 +562,6 @@ let Board = class {
         };
       };
     };
-  };
-  getImage() {
-     return this.#cnv.convertToBlob();
   };
   parseUCIMoves(str) {
     this.moves = Move.fromUCIString(str);
@@ -690,26 +767,13 @@ let Board = class {
   };
   undoMove(move) {
     // Todo
+    const src = Move.getStartSq(move) ^ 56, dst = Move.getTargetSq(move) ^ 56, colorIdx = Number(this.isWhiteToMove);
+    // Change side to move
+    this.isWhiteToMove = !this.isWhiteToMove;
   };
-  hasKingsideCastleRight(isWhite) {
-    return (this.castlingRights & (isWhite ? 1 : 4)) !== 0;
+  visualizeBitboard() {
+    // Todo
   };
-  hasQueensideCastleRight(isWhite) {
-    return (this.castlingRights & (isWhite ? 2 : 8)) !== 0;
-  };
-  setPiece(index, newPiece) {
-    this.#squares[index] = newPiece;
-
-    // Update the canvas
-    const labels = [" ", "wK", "wQ", "wR", "wN", "wB", "wP", " ", " ", "bK", "bQ", "bR", "bN", "bB", "bP", " "];
-    this.#ctx.fillStyle = ((index ^ (index >> 3)) & 1) ? this.cnvDarkColor : this.cnvLightColor;
-    this.#ctx.fillRect((index & 7) * 100, (index >> 3) * 100, 100, 100);
-    const sprite = this.bmpSprites[labels[newPiece - 8]];
-    if (sprite) {
-      this.#ctx.drawImage(sprite, (index & 7) * 100, (index >> 3) * 100, 100, 100);
-    };
-  };
-  visualizeBitboard;
 };
 
 let Piece = {
@@ -923,12 +987,31 @@ let Move = class {
   };
 };
 
+let MoveGenerator = class {
+  inCheck;
+
+  generateKingMoves(src) {
+    // return BitboardHelper.genKingMoves(src);
+  };
+  generateKnightMoves(src) {
+    // return BitboardHelper.genKnightMoves(src);
+  };
+  generatePawnMoves(src) {
+    // return BitboardHelper.genPawnMoves(src);
+  };
+  generateSlidingMoves(src, piece) {
+    // Todo
+    // return BitboardHelper.genSliderMoves();
+  };
+};
+
 let bitboardToString = function (bitboard) {
   if (typeof bitboard === "bigint") {
     return bitboard.toString(2).padStart(64, "0").match(/.{8}/g).join("\n");
   } else if (bitboard.length >= 2) {
     let output = "";
     for (const chunk of bitboard) {
+      // Need to reverse element order?
       output += chunk.toString(2).padStart(32, "0").match(/.{8}/g).join("\n") + "\n";
     };
     return output;
